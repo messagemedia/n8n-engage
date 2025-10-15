@@ -1,0 +1,66 @@
+{
+  "name": "n8n-nodes-sms-sender",
+  "version": "1.0.35",
+  "description": "n8n community node to send SMS via MessageMedia",
+  "keywords": [
+    "n8n-community-node",
+    "n8n-nodes",
+    "sms",
+    "messagemedia"
+  ],
+  "license": "MIT",
+  "author": "Community Contributors",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "n8n": {
+    "nodes": [
+      "dist/nodes/SmsSender/SmsSender.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/MessageMediaApi.credentials.js"
+    ]
+  },
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "test": "vitest run",
+    "dev:test": "vitest",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "mustache": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.5",
+    "@types/node": "^20.14.9",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "n8n-core": "^1.0.0",
+    "n8n-workflow": "^1.0.0",
+    "nock": "^13.4.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0",
+    "node-fetch": "^2.6.9"
+  },
+  "peerDependencies": {
+    "n8n-core": ">=1.0.0",
+    "n8n-workflow": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

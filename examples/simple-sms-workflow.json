@@ -1,0 +1,19 @@
+{
+  "name": "Simple SMS",
+  "nodes": [
+    {
+      "parameters": {
+        "provider": "Twilio",
+        "to": "+14155552671",
+        "from": "+14155559876",
+        "message": "Hello from n8n SMS Sender"
+      },
+      "id": "SmsSenderNode1",
+      "name": "SMS Sender",
+      "type": "n8n-nodes-sms-sender.SmsSender",
+      "typeVersion": 1,
+      "position": [320, 260]
+    }
+  ],
+  "connections": {}
+}
