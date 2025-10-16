@@ -1,0 +1,42 @@
+# Node dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+lib/
+coverage/
+.nyc_output/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# n8n specific (if packaging custom nodes)
+credentials/
+*.credentials.json
+
+# Package manager artifacts
+.pnpm-debug.log
