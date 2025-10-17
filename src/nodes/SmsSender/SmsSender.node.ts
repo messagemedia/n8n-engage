@@ -59,23 +59,7 @@ export class SmsSender implements INodeType {
         description: 'Message to send, up to 1600 characters',
       },
       
-      // 2. OPERATION MODES
-      {
-        displayName: 'Use Sandbox (Dry Run)',
-        name: 'useSandbox',
-        type: 'boolean',
-        default: false,
-        description: 'Validate but do not send; return simulated success',
-      },
-      {
-        displayName: 'Test Mode (Stub URL)',
-        name: 'testMode',
-        type: 'boolean',
-        default: false,
-        description: 'Redirect to httpbin.org for testing (no real SMS sent)',
-      },
-      
-      // 3. ADDITIONAL FIELDS
+      // 2. ADDITIONAL FIELDS
       {
         displayName: 'Additional Fields',
         name: 'additionalFields',
@@ -256,8 +240,6 @@ export class SmsSender implements INodeType {
       const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
       
       const message = this.getNodeParameter('message', itemIndex) as string;
-      const useSandbox = this.getNodeParameter('useSandbox', itemIndex, false) as boolean;
-      const testMode = this.getNodeParameter('testMode', itemIndex, false) as boolean;
 
       const additional = this.getNodeParameter('additionalFields', itemIndex, {}) as {
         statusCallbackUrl?: string;
@@ -307,26 +289,6 @@ export class SmsSender implements INodeType {
 
       const queuedAt = new Date().toISOString();
 
-      if (useSandbox) {
-        const output: SmsOutputItem = {
-          provider: 'MessageMedia',
-          to: toResult.ok ? toResult.value : toRaw,
-          from: fromResult.ok ? fromResult.value : fromRaw,
-          message,
-          status: toResult.ok && fromResult.ok ? 'queued' : 'failed',
-          providerMessageId: toResult.ok && fromResult.ok ? `sandbox_${Date.now()}` : null,
-          error: toResult.ok && fromResult.ok ? null : 'Number normalization failed',
-          meta: {
-            cost: { currency: 'USD', amount: 0 },
-            encoding,
-            queuedAt,
-            rateLimitAppliedMs: additional.rateLimit || 0,
-          },
-        };
-        returnData.push({ json: output as unknown as IDataObject });
-        continue;
-      }
-
       const credentials = (await this.getCredentials('messageMediaApi')) as unknown as Record<string, string>;
       const strategy = new MessageMediaProvider();
 
@@ -337,7 +299,7 @@ export class SmsSender implements INodeType {
           message,
           statusCallbackUrl: additional.statusCallbackUrl || undefined,
           encoding: additional.encoding || 'auto',
-          testMode,
+          testMode: false,
           providerRegion: undefined, // MessageMedia does not have a region concept
           helpers: this.helpers,
           credentials,
