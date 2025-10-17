@@ -114,7 +114,7 @@ describe('SmsSender node execute', () => {
         return paramsPerItem[itemIndex][name];
       },
       getNode() {
-        return { name: 'MessageMedia SMS Sender' } as any;
+        return { name: 'Sinch Engage' } as any;
       },
       helpers,
       async getCredentials(name: string) {

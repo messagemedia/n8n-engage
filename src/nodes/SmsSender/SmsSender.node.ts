@@ -15,13 +15,13 @@ import { MessageMediaProvider } from './providers/MessageMediaProvider';
 
 export class SmsSender implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'MessageMedia SMS Sender',
+    displayName: 'Sinch Engage',
     name: 'smsSender',
     group: ['transform'],
     version: 1,
-    description: 'Send SMS via MessageMedia',
+    description: 'Send SMS via Sinch Engage',
     defaults: {
-      name: 'MessageMedia SMS Sender',
+      name: 'Sinch Engage',
     },
     inputs: ['main' as NodeConnectionType],
     outputs: ['main' as NodeConnectionType],
@@ -39,51 +39,15 @@ export class SmsSender implements INodeType {
         description: 'Destination phone number (E.164 preferred)',
       },
       {
-        displayName: 'From (Account Numbers)',
-        name: 'fromSelection',
-        type: 'options',
-        options: [
-          {
-            name: 'Use Account Number',
-            value: 'account',
-            description: 'Select from available account phone numbers',
-          },
-          {
-            name: 'Custom Number',
-            value: 'custom',
-            description: 'Enter a custom sender phone number',
-          },
-        ],
-        default: 'account',
-        description: 'Choose how to set the sender phone number',
-      },
-      {
-        displayName: 'Account Phone Number',
-        name: 'fromAccountNumber',
+        displayName: 'From',
+        name: 'from',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getAccountNumbers',
         },
         default: '',
-        description: 'Select from available account phone numbers',
-        displayOptions: {
-          show: {
-            fromSelection: ['account'],
-          },
-        },
-      },
-      {
-        displayName: 'From (Custom)',
-        name: 'fromCustom',
-        type: 'string',
         required: false,
-        default: '',
-        description: 'Custom sender phone number (E.164 format)',
-        displayOptions: {
-          show: {
-            fromSelection: ['custom'],
-          },
-        },
+        description: 'Sender phone number. Leave empty to use account default number.',
       },
       {
         displayName: 'Message',
@@ -170,86 +134,114 @@ export class SmsSender implements INodeType {
         try {
           const credentials = await this.getCredentials('messageMediaApi') as { apiKey: string; apiSecret: string };
           if (!credentials || !credentials.apiKey || !credentials.apiSecret) {
-            console.log('No credentials available for MessageMedia API');
-            return [];
-          }
-
-          console.log('Fetching account numbers from MessageMedia API...');
-          
-          // Fetch account numbers from MessageMedia API using the correct endpoint
-          const response = await this.helpers.request({
-            method: 'GET',
-            uri: 'https://api.messagemedia.com/v1/messaging/numbers/sender_address/addresses',
-            auth: { user: credentials.apiKey, pass: credentials.apiSecret },
-            headers: { 'Content-Type': 'application/json' },
-            json: true,
-          });
-
-          console.log('MessageMedia API response:', JSON.stringify(response, null, 2));
-
-          // Handle different possible response structures
-          let numbers = [];
-          
-          if (response && typeof response === 'object') {
-            // Try different possible response structures
-            if (Array.isArray(response)) {
-              numbers = response;
-            } else if (response.addresses && Array.isArray(response.addresses)) {
-              numbers = response.addresses;
-            } else if (response.numbers && Array.isArray(response.numbers)) {
-              numbers = response.numbers;
-            } else if (response.data && Array.isArray(response.data)) {
-              numbers = response.data;
-            } else if (response.content && Array.isArray(response.content)) {
-              numbers = response.content;
-            } else if (response.items && Array.isArray(response.items)) {
-              numbers = response.items;
-            } else {
-              // If response is an object but no array found, try to extract any array
-              const keys = Object.keys(response);
-              for (const key of keys) {
-                if (Array.isArray(response[key])) {
-                  numbers = response[key];
-                  console.log(`Found array in response.${key}:`, numbers);
-                  break;
-                }
-              }
-            }
-          }
-
-          console.log('Extracted numbers array:', numbers);
-          console.log('Numbers array length:', numbers.length);
-
-          if (numbers.length === 0) {
-            console.log('No numbers found in response. Response keys:', response ? Object.keys(response) : 'No response');
-            
-            // Return a helpful message option
             return [
               {
-                name: 'No additional sender addresses found - using default account number',
-                value: 'use_default',
+                name: 'Use Account Default',
+                value: '',
+                description: 'No credentials configured',
               }
             ];
           }
 
-          // Map the numbers to the expected format
-          const options = numbers.map((num: any, index: number) => {
-            // Try different possible property names for the phone number
-            const phoneNumber = num.address || num.number || num.phoneNumber || num.phone || num.id || `Number ${index + 1}`;
-            const type = num.type || num.numberType || num.category || 'SMS';
-            
-            return {
-              name: `${phoneNumber} (${type})`,
-              value: phoneNumber,
-            };
-          });
+          // Fetch all pages of account numbers from MessageMedia API
+          let allNumbers: any[] = [];
+          let nextToken: string | undefined;
+          let pageCount = 0;
+          const maxPages = 10; // Safety limit to prevent infinite loops
 
-          console.log('Generated options:', options);
+          do {
+            const params: Record<string, string> = {};
+            if (nextToken) {
+              params.page_token = nextToken;
+            }
+
+            const queryString = Object.keys(params).length > 0 
+              ? '?' + Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')
+              : '';
+
+            const response = await this.helpers.request({
+              method: 'GET',
+              uri: `https://api.messagemedia.com/v1/messaging/numbers/sender_address/addresses${queryString}`,
+              auth: { user: credentials.apiKey, pass: credentials.apiSecret },
+              headers: { 'Content-Type': 'application/json' },
+              json: true,
+            });
+
+            // Extract numbers from current page
+            if (response.data && Array.isArray(response.data)) {
+              allNumbers.push(...response.data);
+            }
+
+            // Check for next page
+            nextToken = response.pagination?.next_token;
+            pageCount++;
+
+          } while (nextToken && pageCount < maxPages);
+
+          // Build options array starting with "Use Default" option
+          const options: Array<{ name: string; value: string; description?: string }> = [
+            {
+              name: 'Use Account Default',
+              value: '',
+              description: 'Use the default sender number configured on your MessageMedia account',
+            }
+          ];
+
+          // Process each number into a dropdown option
+          for (const numberObj of allNumbers) {
+            if (!numberObj.sender_address) continue;
+
+            // Build a descriptive name for the dropdown
+            const phoneNumber = numberObj.sender_address;
+            const label = numberObj.label?.trim() || '';
+            const capabilities = numberObj.number?.capabilities || [];
+            const numberType = numberObj.number?.type || numberObj.sender_address_type || 'UNKNOWN';
+            const displayStatus = numberObj.display_status;
+
+            // Format capabilities as comma-separated list (e.g., "SMS, MMS")
+            const capsString = capabilities.length > 0 ? capabilities.join(', ') : 'SMS';
+
+            // Build the display name
+            let displayName: string;
+            if (label) {
+              // If there's a label, show: "+1234567890 - Label (SMS, MMS)"
+              displayName = `${phoneNumber} - ${label} (${capsString})`;
+            } else {
+              // No label: "+1234567890 (SMS, MMS)"
+              displayName = `${phoneNumber} (${capsString})`;
+            }
+
+            // Build description with additional info
+            let description = `Type: ${numberType}`;
+            if (displayStatus === 'EXPIRED') {
+              description += ' - ⚠️ EXPIRED';
+            } else if (displayStatus === 'APPROVED') {
+              description += ' - ✓ APPROVED';
+            }
+
+            // Skip expired numbers (optional - remove this if you want to show them)
+            if (displayStatus === 'EXPIRED') {
+              continue;
+            }
+
+            options.push({
+              name: displayName,
+              value: phoneNumber,
+              description,
+            });
+          }
+
           return options;
           
         } catch (error) {
-          console.error('Error fetching account numbers from MessageMedia API:', error);
-          return [];
+          // Return default option on error so the node doesn't break
+          return [
+            {
+              name: 'Use Account Default',
+              value: '',
+              description: 'Error loading numbers - will use account default',
+            }
+          ];
         }
       },
     },
@@ -261,26 +253,7 @@ export class SmsSender implements INodeType {
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       const toRaw = this.getNodeParameter('to', itemIndex) as string;
-      const fromSelection = this.getNodeParameter('fromSelection', itemIndex) as string;
-      const fromAccountNumber = this.getNodeParameter('fromAccountNumber', itemIndex) as string | number;
-      
-      // Get the appropriate "From" field based on provider
-      let fromRaw: string;
-      if (fromSelection === 'account') {
-        if (!fromAccountNumber || fromAccountNumber === 'use_default') {
-          // Use default account number (empty string means use default)
-          fromRaw = '';
-        } else {
-          fromRaw = String(fromAccountNumber);
-        }
-      } else {
-        // Safely get the fromCustom parameter
-        const fromCustomValue = this.getNodeParameter('fromCustom', itemIndex, '') as string;
-        if (!fromCustomValue || fromCustomValue.trim() === '') {
-          throw new NodeApiError(this.getNode(), { message: 'Custom sender phone number is required when using "Custom Number" option.' });
-        }
-        fromRaw = fromCustomValue;
-      }
+      const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
       
       const message = this.getNodeParameter('message', itemIndex) as string;
       const useSandbox = this.getNodeParameter('useSandbox', itemIndex, false) as boolean;
