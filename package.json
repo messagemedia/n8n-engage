@@ -15,7 +15,8 @@
   "types": "dist/index.d.ts",
   "n8n": {
     "nodes": [
-      "dist/nodes/SmsSender/SmsSender.node.js"
+      "dist/nodes/SmsSender/SmsSender.node.js",
+      "dist/nodes/SmsSender/SmsSenderTrigger.node.js"
     ],
     "credentials": [
       "dist/credentials/MessageMediaApi.credentials.js"
@@ -32,13 +33,16 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm run copy:icons",
+    "copy:icons": "mkdir -p dist/nodes/SmsSender && cp -f src/nodes/SmsSender/*.png src/nodes/SmsSender/*.svg dist/nodes/SmsSender/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "test": "vitest run",
     "dev:test": "vitest",
     "prepare": "npm run build"
   },
   "dependencies": {
+    "google-libphonenumber": "^3.2.43",
+    "i18n-iso-countries": "^7.14.0",
     "mustache": "^4.2.0"
   },
   "devDependencies": {
@@ -51,10 +55,10 @@
     "n8n-core": "^1.0.0",
     "n8n-workflow": "^1.0.0",
     "nock": "^13.4.0",
+    "node-fetch": "^2.6.9",
     "prettier": "^3.3.3",
     "typescript": "^5.5.3",
-    "vitest": "^1.6.0",
-    "node-fetch": "^2.6.9"
+    "vitest": "^1.6.0"
   },
   "peerDependencies": {
     "n8n-core": ">=1.0.0",

@@ -12,11 +12,27 @@ import { normalizePhoneNumberToE164, detectEncoding } from '../../utils/phone';
 import type { SmsOutputItem, EncodingOption, ProviderName } from './types';
 import type { ProviderStrategy } from './providers/ProviderStrategy';
 import { MessageMediaProvider } from './providers/MessageMediaProvider';
+import * as countries from 'i18n-iso-countries';
+
+// Register English locale for country names
+countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
+
+// Generate country list for dropdown (sorted alphabetically by name)
+function getCountryOptions() {
+  const countryList = countries.getNames('en', { select: 'official' });
+  return Object.entries(countryList)
+    .map(([code, name]) => ({
+      name: `${name} (${code})`,
+      value: code,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 export class SmsSender implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Engage',
     name: 'smsSender',
+    icon: 'file:sinch-logo.png',
     group: ['transform'],
     version: 1,
     description: 'Send SMS via Sinch Engage',
@@ -36,7 +52,17 @@ export class SmsSender implements INodeType {
         type: 'string',
         required: true,
         default: '',
-        description: 'Destination phone number (E.164 preferred)',
+        description: 'Destination phone number (E.164 preferred, e.g., +61437536808, or local format like 0437536808)',
+      },
+      {
+        displayName: 'Country',
+        name: 'defaultCountry',
+        type: 'options',
+        options: getCountryOptions(),
+        default: '',
+        required: false,
+        description: 'Country for parsing local phone numbers (e.g., "0437 536 808" → "+61437536808" if Australia selected). Required for local/national format numbers without + prefix.',
+        placeholder: 'Select a country...',
       },
       {
         displayName: 'From',
@@ -175,35 +201,46 @@ export class SmsSender implements INodeType {
           for (const numberObj of allNumbers) {
             if (!numberObj.sender_address) continue;
 
-            // Build a descriptive name for the dropdown
+            // Extract data from API response
             const phoneNumber = numberObj.sender_address;
             const label = numberObj.label?.trim() || '';
             const capabilities = numberObj.number?.capabilities || [];
             const numberType = numberObj.number?.type || numberObj.sender_address_type || 'UNKNOWN';
             const displayStatus = numberObj.display_status;
+            const destinationCountries = numberObj.destination_countries || [];
 
-            // Format capabilities as comma-separated list (e.g., "SMS, MMS")
-            const capsString = capabilities.length > 0 ? capabilities.join(', ') : 'SMS';
-
-            // Build the display name
+            // Build the display name (identifier only: phone number + label)
             let displayName: string;
             if (label) {
-              // If there's a label, show: "+1234567890 - Label (SMS, MMS)"
-              displayName = `${phoneNumber} - ${label} (${capsString})`;
+              // If there's a label: "+1234567890 - Label"
+              displayName = `${phoneNumber} - ${label}`;
             } else {
-              // No label: "+1234567890 (SMS, MMS)"
-              displayName = `${phoneNumber} (${capsString})`;
+              // No label: "+1234567890"
+              displayName = phoneNumber;
             }
 
-            // Build description with additional info
-            let description = `Type: ${numberType}`;
-            if (displayStatus === 'EXPIRED') {
-              description += ' - ⚠️ EXPIRED';
-            } else if (displayStatus === 'APPROVED') {
-              description += ' - ✓ APPROVED';
+            // Build description with all technical specs/metadata
+            const descriptionParts: string[] = [];
+            
+            // Add capabilities (SMS, MMS, etc.)
+            if (capabilities.length > 0) {
+              descriptionParts.push(capabilities.join(', '));
+            } else {
+              descriptionParts.push('SMS'); // Default assumption
+            }
+            
+            // Add number type
+            descriptionParts.push(`Type: ${numberType}`);
+            
+            // Add destination countries if available
+            if (destinationCountries.length > 0) {
+              const countriesString = destinationCountries.join(', ');
+              descriptionParts.push(`Countries: ${countriesString}`);
             }
 
-            // Skip expired numbers (optional - remove this if you want to show them)
+            const description = descriptionParts.join(' | ');
+
+            // Skip expired numbers
             if (displayStatus === 'EXPIRED') {
               continue;
             }
@@ -237,6 +274,7 @@ export class SmsSender implements INodeType {
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       const toRaw = this.getNodeParameter('to', itemIndex) as string;
+      const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
       const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
       
       const message = this.getNodeParameter('message', itemIndex) as string;
@@ -257,14 +295,14 @@ export class SmsSender implements INodeType {
         });
       }
 
-      const toResult = normalizePhoneNumberToE164(toRaw);
+      const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
       
       // Handle from field - if empty, skip normalization (will use default account number)
       let fromResult: { ok: boolean; value: string; error?: string };
       if (!fromRaw || fromRaw.trim() === '') {
         fromResult = { ok: true, value: '' };
       } else {
-        const normalized = normalizePhoneNumberToE164(fromRaw);
+        const normalized = normalizePhoneNumberToE164(fromRaw, defaultCountry);
         if (normalized.ok) {
           fromResult = { ok: true, value: normalized.value };
         } else {
