@@ -1,16 +1,14 @@
-
-
 steps:
   - label: ":package: Install dependencies"
     commands:
-      - "npm ci"
+      - "bash deploy/ci-run.sh install"
     key: install
     agents:
       queue: "connectors-stg-ap-southeast-2"
 
   - label: ":mag: Lint"
     commands:
-      - "npm run lint"
+      - "bash deploy/ci-run.sh lint"
     depends_on: install
     key: lint
     agents:
@@ -18,7 +16,7 @@ steps:
 
   - label: ":hammer: Build"
     commands:
-      - "npm run build"
+      - "bash deploy/ci-run.sh build"
     depends_on: lint
     key: build
     agents:
@@ -26,13 +24,11 @@ steps:
 
   - label: ":test_tube: Test"
     commands:
-      - "npm run test"
+      - "bash deploy/ci-run.sh test"
     depends_on: build
     key: test
     agents:
       queue: "nextgen-deploy-m4udev"
-
-  - wait
 
   - wait
 
@@ -46,7 +42,6 @@ steps:
     depends_on: release-approval
     key: release
     commands:
-      - "npm run build"
-      - "npm publish"
+      - "bash deploy/ci-run.sh release"
     agents:
       queue: "nextgen-deploy-m4udev"
