@@ -17,7 +17,7 @@ CACHE_DIR=".ci-npm-cache"
 mkdir -p "${CACHE_DIR}" || true
 
 # Compose base docker command (mount project + optional npm cache)
-DOCKER_CMD=(docker run --rm \
+DOCKER_CMD=(docker run --rm --platform linux/amd64 \
   -v "$(pwd):${WORKDIR}" \
   -w "${WORKDIR}" \
   -e CI=1 \
