@@ -1,0 +1,42 @@
+
+
+steps:
+  - label: ":package: Install dependencies"
+    commands:
+      - "npm ci"
+    key: install
+
+  - label: ":mag: Lint"
+    commands:
+      - "npm run lint"
+    depends_on: install
+    key: lint
+
+  - label: ":hammer: Build"
+    commands:
+      - "npm run build"
+    depends_on: lint
+    key: build
+
+  - label: ":test_tube: Test"
+    commands:
+      - "npm run test"
+    depends_on: build
+    key: test
+
+  - wait
+
+  - wait
+
+  - block: "Manual approval required to deploy release"
+    if: build.branch == "main"
+    depends_on: test
+    key: release-approval
+
+  - label: ":rocket: Release (main only)"
+    if: build.branch == "main"
+    depends_on: release-approval
+    key: release
+    commands:
+      - "npm run build"
+      - "npm publish"
