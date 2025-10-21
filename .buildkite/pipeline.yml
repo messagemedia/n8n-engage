@@ -6,7 +6,7 @@ steps:
       - "npm ci"
     key: install
     agents:
-      queue: "nextgen-deploy-m4udev"
+      queue: "connectors-stg-ap-southeast-2"
 
   - label: ":mag: Lint"
     commands:
