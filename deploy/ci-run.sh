@@ -11,7 +11,7 @@ if [[ -z "${STEP}" ]]; then
   exit 2
 fi
 
-IMAGE="node:18-alpine"
+IMAGE="node:20-alpine"
 WORKDIR="/workspace"
 CACHE_DIR=".ci-npm-cache"
 mkdir -p "${CACHE_DIR}" || true
