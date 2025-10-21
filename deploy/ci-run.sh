@@ -28,22 +28,23 @@ DOCKER_CMD=(docker run --rm --platform linux/amd64 \
 run_in_docker() {
   local inner_cmd="$1"
   echo "[ci-run] → ${inner_cmd}" >&2
-  "${DOCKER_CMD[@]}" "set -euo pipefail; ${inner_cmd}"  
+  echo "[ci-run] Starting Docker container with node:20-alpine..." >&2
+  "${DOCKER_CMD[@]}" "set -euo pipefail; echo '[container] Running command...'; ${inner_cmd}"  
 }
 
 case "${STEP}" in
   install)
-    run_in_docker "npm ci --no-audit --no-fund"
+    run_in_docker "echo '[npm] Installing dependencies...'; npm ci --no-audit --no-fund --progress=true"
     ;;
   lint)
-    run_in_docker "[ -d node_modules ] || npm ci --no-audit --no-fund; npm run lint"
+    run_in_docker "echo '[check] Verifying node_modules...'; [ -d node_modules ] || (echo '[npm] Installing dependencies...' && npm ci --no-audit --no-fund --progress=true); echo '[lint] Running linter...'; npm run lint"
     ;;
   build)
-    run_in_docker "[ -d node_modules ] || npm ci --no-audit --no-fund; npm run build"
+    run_in_docker "echo '[check] Verifying node_modules...'; [ -d node_modules ] || (echo '[npm] Installing dependencies...' && npm ci --no-audit --no-fund --progress=true); echo '[build] Compiling TypeScript...'; npm run build"
     ;;
   test)
     # Use vitest; ensure dependencies installed, run in watch-disabled mode
-    run_in_docker "[ -d node_modules ] || npm ci --no-audit --no-fund; npm test"
+    run_in_docker "echo '[check] Verifying node_modules...'; [ -d node_modules ] || (echo '[npm] Installing dependencies...' && npm ci --no-audit --no-fund --progress=true); echo '[test] Running test suite...'; npm test"
     ;;
   release)
     if [[ "${CI:-}" != "" && "${GIT_BRANCH:-}" != "main" && "${BUILDKITE_BRANCH:-}" != "main" ]]; then
@@ -54,7 +55,7 @@ case "${STEP}" in
       echo "NPM_TOKEN env var must be provided for release" >&2
       exit 4
     fi
-    run_in_docker "[ -d node_modules ] || npm ci --no-audit --no-fund; echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc; npm run build; npm publish --access public"
+    run_in_docker "echo '[check] Verifying node_modules...'; [ -d node_modules ] || (echo '[npm] Installing dependencies...' && npm ci --no-audit --no-fund --progress=true); echo '[release] Configuring npm registry...'; echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc; echo '[release] Building package...'; npm run build; echo '[release] Publishing to npm...'; npm publish --access public"
     ;;
   *)
     echo "Unknown step: ${STEP}" >&2
