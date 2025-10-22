@@ -34,7 +34,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f src/nodes/SinchEngage/*.png src/nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f src/nodes/SinchEngage/*.png dist/nodes/SinchEngage/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
     "test": "vitest run",

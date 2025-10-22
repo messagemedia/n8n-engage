@@ -37,7 +37,7 @@ temp/
 *.tmp
 
 # n8n specific (if packaging custom nodes)
-credentials/
+# Only ignore credential data files, not TypeScript source files
 *.credentials.json
 
 # Package manager artifacts
