@@ -9,7 +9,7 @@ echo "🚀 n8n-nodes-sinch-engage NPM Deployment"
 echo "========================================"
 
 # Check if we're in the right directory
-if [[ ! -f "package.json" ]] || [[ "$(grep -o '"name": "n8n-nodes-sinch-engage"' package.json)" == "" ]]; then
+if [[ ! -f "package.json" ]] || [[ "$(grep -o '"name": "@sinch-engage/n8n-nodes-sinch-engage"' package.json)" == "" ]]; then
     echo "❌ Error: Please run this script from the n8n-engage project root directory"
     exit 1
 fi
@@ -76,12 +76,14 @@ publish_package() {
         echo "✅ Successfully published!"
         echo ""
         echo "📦 Package Details:"
-        echo "   Name: $(grep '"name"' package.json | cut -d'"' -f4)"
-        echo "   Version: $(grep '"version"' package.json | cut -d'"' -f4)"
-        echo "   NPM URL: https://www.npmjs.com/package/$(grep '"name"' package.json | cut -d'"' -f4)"
+        PACKAGE_NAME=$(grep '"name"' package.json | cut -d'"' -f4)
+        PACKAGE_VERSION=$(grep '"version"' package.json | cut -d'"' -f4)
+        echo "   Name: $PACKAGE_NAME"
+        echo "   Version: $PACKAGE_VERSION"
+        echo "   NPM URL: https://www.npmjs.com/package/$PACKAGE_NAME"
         echo ""
         echo "🔗 Installation:"
-        echo "   npm install $(grep '"name"' package.json | cut -d'"' -f4)@alpha"
+        echo "   npm install $PACKAGE_NAME@alpha"
         echo ""
         echo "🎯 Next Steps:"
         echo "   1. Test the package in a development n8n instance"
@@ -97,8 +99,10 @@ publish_package() {
 
 # Main execution
 echo "Current package info:"
-echo "  Name: $(grep '"name"' package.json | cut -d'"' -f4)"
-echo "  Version: $(grep '"version"' package.json | cut -d'"' -f4)"
+PACKAGE_NAME=$(grep '"name"' package.json | cut -d'"' -f4)
+PACKAGE_VERSION=$(grep '"version"' package.json | cut -d'"' -f4)
+echo "  Name: $PACKAGE_NAME"
+echo "  Version: $PACKAGE_VERSION"
 echo ""
 
 get_npm_token

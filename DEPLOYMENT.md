@@ -1,6 +1,6 @@
-# Deployment Guide: n8n-nodes-sinch-engage
+# Deployment Guide: @sinch-engage/n8n-nodes-sinch-engage
 
-This guide explains how to deploy the n8n Sinch Engage SMS node to NPM using your personal access token.
+This guide explains how to deploy the n8n Sinch Engage SMS node to the Sinch Engage NPM organization using your personal access token.
 
 ## Overview
 
@@ -84,20 +84,20 @@ The `deploy-to-npm.sh` script provides:
 ### 1. Verify Publication
 ```bash
 # Check if package is published
-npm view n8n-nodes-sinch-engage versions --json
+npm view @sinch-engage/n8n-nodes-sinch-engage versions --json
 
 # View package info
-npm view n8n-nodes-sinch-engage
+npm view @sinch-engage/n8n-nodes-sinch-engage
 ```
 
 ### 2. Test Installation
 ```bash
 # Install the alpha version
-npm install n8n-nodes-sinch-engage@alpha
+npm install @sinch-engage/n8n-nodes-sinch-engage@alpha
 
 # Or install in n8n (recommended for testing)
 # In n8n: Settings → Community Nodes → Install
-# Enter: n8n-nodes-sinch-engage
+# Enter: @sinch-engage/n8n-nodes-sinch-engage
 ```
 
 ### 3. Test in n8n
@@ -122,12 +122,12 @@ npm install n8n-nodes-sinch-engage@alpha
 **❌ "Package not found after publishing"**
 - Wait a few minutes for NPM propagation
 - Check correct package name spelling
-- Verify alpha tag: `npm view n8n-nodes-sinch-engage dist-tags`
+- Verify alpha tag: `npm view @sinch-engage/n8n-nodes-sinch-engage dist-tags`
 
 ### Getting Help
 - Check NPM status: https://status.npmjs.org/
 - NPM support: https://www.npmjs.com/support
-- Package page: https://www.npmjs.com/package/n8n-nodes-sinch-engage
+- Package page: https://www.npmjs.com/package/@sinch-engage/n8n-nodes-sinch-engage
 
 ## Version Management
 
@@ -147,6 +147,8 @@ npm version prerelease --preid=beta
 # For GA release
 npm version patch  # or minor/major
 ```
+
+**Note**: For scoped packages in organizations, ensure your NPM token has the appropriate organization permissions.
 
 ## Security Considerations
 
