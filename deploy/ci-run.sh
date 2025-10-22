@@ -29,7 +29,7 @@ run_in_docker() {
   local inner_cmd="$1"
   echo "[ci-run] → ${inner_cmd}" >&2
   echo "[ci-run] Starting Docker container with node:20-alpine..." >&2
-  "${DOCKER_CMD[@]}" "set -euo pipefail; echo '[container] Running command...'; ${inner_cmd}"  
+  "${DOCKER_CMD[@]}" "set -euo pipefail; echo '[container] Running command...'; npm config set fetch-retries 5; npm config set fetch-retry-mintimeout 20000; npm config set fetch-retry-maxtimeout 120000; ${inner_cmd}"  
 }
 
 case "${STEP}" in
