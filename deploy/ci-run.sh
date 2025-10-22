@@ -14,9 +14,8 @@ fi
 IMAGE="node:20-alpine"
 WORKDIR="/workspace"
 CACHE_DIR=".ci-npm-cache"
-mkdir -p "${CACHE_DIR}" || true
+mkdir -p "${CACHE_DIR}" || echo "Warning: Could not create cache directory"
 
-# Compose base docker command (mount project + optional npm cache)
 DOCKER_CMD=(docker run --rm --platform linux/amd64 \
   -v "$(pwd):${WORKDIR}" \
   -w "${WORKDIR}" \
@@ -72,12 +71,16 @@ run_in_docker() {
     ${inner_cmd}
   "
 
-  "${DOCKER_CMD[@]}" "$full_cmd"
+  echo "[ci-run] Executing Docker command..." >&2
+  if ! "${DOCKER_CMD[@]}" "$full_cmd"; then
+    echo "[ci-run] ❌ Docker command failed with exit code $?" >&2
+    return 1
+  fi
 }
 
 case "${STEP}" in
   install)
-    run_in_docker "
+    if ! run_in_docker "
       echo '[npm] Starting dependency installation...'
       echo '[npm] Current directory contents:'
       ls -la
@@ -97,27 +100,30 @@ case "${STEP}" in
       (
         npm ci --no-audit --no-fund --verbose
       ) &
-      NPM_PID=$!
+      NPM_PID=\$\$
 
       # Wait for npm to complete or timeout after 10 minutes
       if command -v timeout >/dev/null 2>&1; then
-        timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+        timeout 600 wait \$\$ || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM \$\$ 2>/dev/null && exit 124)
       else
         # Fallback: wait with background timeout check
         (
           sleep 600
           echo '[npm] Installation timed out after 10 minutes'
-          kill -TERM $NPM_PID 2>/dev/null
+          kill -TERM \$\$ 2>/dev/null
         ) &
-        TIMEOUT_PID=$!
-        wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
-        kill -TERM $TIMEOUT_PID 2>/dev/null
+        TIMEOUT_PID=\$\$
+        wait \$\$ || (kill -TERM \$TIMEOUT_PID 2>/dev/null && exit 124)
+        kill -TERM \$TIMEOUT_PID 2>/dev/null
       fi
 
       echo '[npm] Installation completed successfully'
       echo '[npm] Verifying node_modules...'
       ls -la node_modules | head -20
-    "
+    "; then
+      echo "[ci-run] ❌ Install step failed" >&2
+      exit 1
+    fi
     ;;
   lint)
     run_in_docker "
