@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-sms-sender",
-  "version": "1.0.35",
+  "version": "1.1.0-alpha.0",
   "description": "n8n community node to send SMS via MessageMedia",
   "keywords": [
     "n8n-community-node",
@@ -15,8 +15,8 @@
   "types": "dist/index.d.ts",
   "n8n": {
     "nodes": [
-      "dist/nodes/SmsSender/SmsSender.node.js",
-      "dist/nodes/SmsSender/SmsSenderTrigger.node.js"
+      "dist/nodes/SinchEngage/SinchEngage.node.js",
+      "dist/nodes/SinchEngage/SinchEngageTrigger.node.js"
     ],
     "credentials": [
       "dist/credentials/MessageMediaApi.credentials.js"
@@ -34,8 +34,9 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SmsSender && cp -f src/nodes/SmsSender/*.png src/nodes/SmsSender/*.svg dist/nodes/SmsSender/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f src/nodes/SinchEngage/*.png src/nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
     "test": "vitest run",
     "dev:test": "vitest",
     "prepare": "npm run build"

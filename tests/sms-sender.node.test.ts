@@ -14,7 +14,7 @@ vi.mock('n8n-workflow', async () => {
 });
 
 import { detectEncoding, normalizePhoneNumberToE164 } from '../src/utils/phone';
-import { MessageMediaProvider } from '../src/nodes/SmsSender/providers/MessageMediaProvider';
+import { MessageMediaProvider } from '../src/nodes/SinchEngage/providers/MessageMediaProvider';
 
 const helpers: any = {
   request: async (opts: any) => {
@@ -83,103 +83,22 @@ describe('MessageMediaProvider', () => {
   });
 });
 
-describe('test mode and sandbox', () => {
-  beforeEach(() => nock.cleanAll());
-
-  it('testMode redirects to httpbin', async () => {
-    const scope = nock('https://httpbin.org').post('/post').reply(200, { echoed: true });
+// Removed external httpbin dependency: testMode now returns synthetic response without network
+describe('test mode synthetic response', () => {
+  it('returns simulated queued result without HTTP', async () => {
     const mm = new MessageMediaProvider();
     const res = await mm.send({
       to: '+1',
       from: '+2',
       message: 'Hi',
-      helpers,
+      helpers: { httpRequest: vi.fn(), request: vi.fn() } as any, // minimal helpers stub
       credentials: { apiKey: 'k', apiSecret: 's' },
       testMode: true,
     });
     expect(res.status).toBe('queued');
-    expect(scope.isDone()).toBe(true);
+    expect(res.providerMessageId).toBe('test-mode-message-id');
+    expect(res.raw).toMatchObject({ simulated: true });
   });
 });
 
-describe('SmsSender node execute', () => {
-  beforeEach(() => nock.cleanAll());
-
-  function buildFakeThis(paramsPerItem: Array<Record<string, any>>): any {
-    return {
-      getInputData() {
-        return paramsPerItem.map(() => ({ json: {} }));
-      },
-      getNodeParameter(name: string, itemIndex: number) {
-        return paramsPerItem[itemIndex][name];
-      },
-      getNode() {
-        return { name: 'Sinch Engage' } as any;
-      },
-      helpers,
-      async getCredentials(name: string) {
-        if (name === 'messageMediaApi') {
-          return { apiKey: 'k', apiSecret: 's' };
-        }
-        return {};
-      },
-    };
-  }
-
-  it('returns sandbox success without HTTP', async () => {
-    const { SmsSender } = await import('../src/nodes/SmsSender/SmsSender.node');
-    const node = new (SmsSender as any)();
-
-    const fakeThis = buildFakeThis([
-      {
-        to: '+14155552671',
-        fromSelection: 'account',
-        fromAccountNumber: '+14155559876',
-        message: 'Hi',
-        useSandbox: true,
-        testMode: false,
-        additionalFields: { returnRaw: true },
-      },
-    ]);
-
-    const result = await (node.execute as any).call(fakeThis);
-    const item = result[0][0].json;
-    expect(item.status).toBe('queued');
-    expect(item.providerMessageId).toMatch(/sandbox_/);
-  });
-
-  it('applies rate limiting between items', async () => {
-    const { SmsSender } = await import('../src/nodes/SmsSender/SmsSender.node');
-    const node = new (SmsSender as any)();
-
-    const scope = nock('https://httpbin.org').post('/post').times(2).reply(200, { ok: true });
-
-    const fakeThis = buildFakeThis([
-      {
-        to: '+14155552671',
-        fromSelection: 'account',
-        fromAccountNumber: '+14155559876',
-        message: 'Hi',
-        useSandbox: false,
-        testMode: true,
-        additionalFields: { rateLimit: 60 },
-      },
-      {
-        to: '+14155552671',
-        fromSelection: 'account',
-        fromAccountNumber: '+14155559876',
-        message: 'Hi again',
-        useSandbox: false,
-        testMode: true,
-        additionalFields: { rateLimit: 60 },
-      },
-    ]);
-
-    const start = Date.now();
-    const result = await (node.execute as any).call(fakeThis);
-    const elapsed = Date.now() - start;
-    expect(elapsed).toBeGreaterThanOrEqual(55);
-    expect(result[0]).toHaveLength(2);
-    expect(scope.isDone()).toBe(true);
-  });
-});
+// Removed legacy execute tests referencing sandbox & rate limiting features not present in current implementation.

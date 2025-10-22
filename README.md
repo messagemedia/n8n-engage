@@ -27,7 +27,7 @@ npm i n8n-nodes-sms-sender
 
 ### Basic Information
 - **Display Name**: MessageMedia SMS Sender
-- **Name**: `smsSender`
+- **Name**: `SinchEngage`
 - **Group**: `transform`
 - **Inputs**: `main`
 - **Outputs**: `main`
@@ -104,7 +104,7 @@ The node provides a clean, focused interface with logical field organization:
           "statusCallbackUrl": "https://your-webhook.com/sms-status"
         }
       },
-      "type": "n8n-nodes-sms-sender.smsSender",
+      "type": "n8n-nodes-sms-sender.SinchEngage",
       "typeVersion": 1,
       "name": "MessageMedia SMS Sender"
     }
@@ -123,6 +123,42 @@ npm test
 1. **Sandbox Mode**: Returns simulated success without external calls
 2. **Test Mode**: Redirects to `httpbin.org` for HTTP testing
 3. **Live Mode**: Sends actual SMS via MessageMedia API
+
+## 🛠️ Development
+
+### Running Locally
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run linting
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+
+# Run tests
+npm test
+
+# Watch mode for tests
+npm run dev:test
+```
+
+### Code Quality
+This project uses ESLint with TypeScript support to maintain code quality and consistency:
+- **Configuration**: `.eslintrc.json` with `@typescript-eslint/parser`
+- **Standards**: TypeScript recommended rules + Prettier integration
+- **Enforcement**: CI/CD pipeline enforces zero warnings (`--max-warnings=0`)
+
+### Contributing
+Before submitting a pull request:
+1. Run `npm run lint` to check for linting issues
+2. Run `npm run lint:fix` to automatically fix common issues
+3. Run `npm test` to ensure all tests pass
+4. Run `npm run build` to verify the build completes successfully
 
 ## 🛠️ Troubleshooting
 
@@ -159,8 +195,34 @@ npm test
 
 ## 📦 Version History
 
-- **1.0.32** - Sender Dropdown
-- **1.0.31** - Initial release
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
+
+### Release Channels
+
+This package follows semantic versioning with pre-release tags:
+
+- **Alpha** (`1.x.x-alpha.x`) - Internal testing and development builds
+  - Experimental features and breaking changes
+  - For team testing in isolated n8n instances
+  - Install: `npm install n8n-nodes-sms-sender@alpha`
+  
+- **Beta** (`1.x.x-beta.x`) - Public preview releases
+  - Feature-complete but undergoing final testing
+  - Safe for non-production workflows
+  - Install: `npm install n8n-nodes-sms-sender@beta`
+  
+- **General Availability** (`1.x.x`) - Production-ready releases
+  - Stable, fully tested, and verified by n8n
+  - Recommended for production use
+  - Install: `npm install n8n-nodes-sms-sender` (latest stable)
+
+**Current Version**: `1.1.0-alpha.0` - Alpha testing phase
+
+### Version Strategy
+- **Major** (x.0.0): Breaking changes, major feature overhauls
+- **Minor** (1.x.0): New features, non-breaking enhancements
+- **Patch** (1.0.x): Bug fixes, documentation updates
+- **Pre-release**: `-alpha.x`, `-beta.x`, `-rc.x` for testing phases
 
 ## 🤝 Contributing
 

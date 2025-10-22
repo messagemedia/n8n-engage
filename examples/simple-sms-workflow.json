@@ -8,11 +8,14 @@
         "from": "+14155559876",
         "message": "Hello from n8n SMS Sender"
       },
-      "id": "SmsSenderNode1",
+      "id": "SinchEngageNode1",
       "name": "SMS Sender",
-      "type": "n8n-nodes-sms-sender.SmsSender",
+      "type": "n8n-nodes-sms-sender.SinchEngage",
       "typeVersion": 1,
-      "position": [320, 260]
+      "position": [
+        320,
+        260
+      ]
     }
   ],
   "connections": {}
