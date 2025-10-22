@@ -55,30 +55,31 @@ run_in_docker() {
   echo "[ci-run] → ${inner_cmd}" >&2
   echo "[ci-run] Starting Docker container with ${IMAGE}..." >&2
 
-  local full_cmd="
+  # Use cat to pass the command, avoiding shell expansion on host
+  local full_cmd='
     set -euo pipefail
 
-    echo '[container] ===== ENVIRONMENT INFO ====='
-    echo '[container] Node version: '$(node --version)
-    echo '[container] NPM version: '$(npm --version)
-    echo '[container] Platform: '$(uname -m)
-    echo '[container] Working directory: '$(pwd)
-    echo '[container] NPM cache directory: '$(npm config get cache)
-    echo '[container] ================================='
+    echo "[container] ===== ENVIRONMENT INFO ====="
+    echo "[container] Node version: $(node --version 2>/dev/null || echo unavailable)"
+    echo "[container] NPM version: $(npm --version 2>/dev/null || echo unavailable)"
+    echo "[container] Platform: $(uname -m)"
+    echo "[container] Working directory: $(pwd)"
+    echo "[container] NPM cache directory: $(npm config get cache 2>/dev/null || echo unavailable)"
+    echo "[container] ================================="
 
-    echo '[container] ===== NPM CONFIGURATION ====='
-    npm config set fetch-retries 5
-    npm config set fetch-retry-mintimeout 20000
-    npm config set fetch-retry-maxtimeout 120000
-    npm config set progress false
-    npm config set loglevel warn
-    npm config set fund false
-    npm config set audit false
-    echo '[container] ================================='
+    echo "[container] ===== NPM CONFIGURATION ====="
+    npm config set fetch-retries 5 2>/dev/null || true
+    npm config set fetch-retry-mintimeout 20000 2>/dev/null || true
+    npm config set fetch-retry-maxtimeout 120000 2>/dev/null || true
+    npm config set progress false 2>/dev/null || true
+    npm config set loglevel warn 2>/dev/null || true
+    npm config set fund false 2>/dev/null || true
+    npm config set audit false 2>/dev/null || true
+    echo "[container] ================================="
 
-    echo '[container] Running command: ${inner_cmd}'
-    ${inner_cmd}
-  "
+    echo "[container] Running command..."
+    '"$inner_cmd"'
+  '
 
   echo "[ci-run] Executing Docker command..." >&2
   "${DOCKER_CMD[@]}" "$full_cmd"
