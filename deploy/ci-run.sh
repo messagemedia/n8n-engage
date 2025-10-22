@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Generic dockerized Node 20 CI runner for n8n engage community connector
+# Optimized dockerized Node 20 CI runner for n8n engage community connector
 # Usage: ./deploy/ci-run.sh <install|lint|build|test|release>
-# Ensures consistent environment even on agents without Node installed.
+# Uses persistent container with cached dependencies for better performance
 
 STEP="${1:-}" || true
 if [[ -z "${STEP}" ]]; then
@@ -16,16 +16,24 @@ WORKDIR="/workspace"
 CACHE_DIR=".ci-npm-cache"
 mkdir -p "${CACHE_DIR}" || true
 
-# Compose base docker command (mount project + optional npm cache)
+# Compose base docker command with optimized caching
 DOCKER_CMD=(docker run --rm --platform linux/amd64 \
   -v "$(pwd):${WORKDIR}" \
   -w "${WORKDIR}" \
   -e CI=1 \
   -e NODE_ENV=development \
-  -e NPM_CONFIG_PROGRESS=true \
-  -e NPM_CONFIG_Loglevel=info \
-  -v "$(pwd)/${CACHE_DIR}:/root/.npm" \
-  ${IMAGE} sh -c)
+  -e NPM_CONFIG_PROGRESS=false \
+  -e NPM_CONFIG_Loglevel=warn \
+  -e NPM_CONFIG_AUDIT=false \
+  -e NPM_CONFIG_FUND=false \
+  -v "$(pwd)/${CACHE_DIR}:/root/.npm")
+
+# Mount node_modules only if it exists to avoid issues
+if [[ -d "node_modules" ]]; then
+  DOCKER_CMD+=(-v "$(pwd)/node_modules:${WORKDIR}/node_modules")
+fi
+
+DOCKER_CMD+=(${IMAGE} sh -c)
 
 # Add timeout wrapper to prevent hanging builds
 run_with_timeout() {
@@ -62,8 +70,8 @@ run_in_docker() {
     npm config set fetch-retries 5
     npm config set fetch-retry-mintimeout 20000
     npm config set fetch-retry-maxtimeout 120000
-    npm config set progress true
-    npm config set loglevel info
+    npm config set progress false
+    npm config set loglevel warn
     npm config set fund false
     npm config set audit false
     echo '[container] ================================='
@@ -72,6 +80,7 @@ run_in_docker() {
     ${inner_cmd}
   "
 
+  echo "[ci-run] Executing Docker command..." >&2
   "${DOCKER_CMD[@]}" "$full_cmd"
 }
 
@@ -91,30 +100,30 @@ case "${STEP}" in
         npm cache clean --force
       fi
 
-      echo '[npm] Installing dependencies with verbose output and timeout...'
-      # Use timeout to prevent hanging (10 minutes for install)
+      echo '[npm] Installing dependencies (optimized for speed)...'
+      # Use faster install options and reduced timeout for efficiency
       if command -v timeout >/dev/null 2>&1; then
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        timeout 300 npm ci --no-audit --no-fund --prefer-offline
       else
-        npm ci --no-audit --no-fund --verbose
+        npm ci --no-audit --no-fund --prefer-offline
       fi
 
       echo '[npm] Installation completed successfully'
       echo '[npm] Verifying node_modules...'
-      ls -la node_modules | head -20
+      ls -la node_modules | head -10
     "
     ;;
   lint)
     run_in_docker "
       echo '[check] Verifying node_modules...'
       if [ ! -d node_modules ]; then
-        echo '[npm] Installing dependencies first...'
+        echo '[npm] Installing dependencies first (fast mode)...'
         # Check cache health before installing
         if ! npm cache verify 2>/dev/null; then
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        timeout 300 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[lint] Running linter...'
       npm run lint
@@ -125,13 +134,13 @@ case "${STEP}" in
     run_in_docker "
       echo '[check] Verifying node_modules...'
       if [ ! -d node_modules ]; then
-        echo '[npm] Installing dependencies first...'
+        echo '[npm] Installing dependencies first (fast mode)...'
         # Check cache health before installing
         if ! npm cache verify 2>/dev/null; then
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        timeout 300 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[build] Compiling TypeScript...'
       npm run build
@@ -145,13 +154,13 @@ case "${STEP}" in
     run_in_docker "
       echo '[check] Verifying node_modules...'
       if [ ! -d node_modules ]; then
-        echo '[npm] Installing dependencies first...'
+        echo '[npm] Installing dependencies first (fast mode)...'
         # Check cache health before installing
         if ! npm cache verify 2>/dev/null; then
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        timeout 300 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[test] Running test suite...'
       npm test
@@ -170,13 +179,13 @@ case "${STEP}" in
     run_in_docker "
       echo '[check] Verifying node_modules...'
       if [ ! -d node_modules ]; then
-        echo '[npm] Installing dependencies first...'
+        echo '[npm] Installing dependencies first (fast mode)...'
         # Check cache health before installing
         if ! npm cache verify 2>/dev/null; then
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        timeout 300 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[release] Configuring npm registry...'
       echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
