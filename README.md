@@ -124,38 +124,6 @@ npm test
 2. **Test Mode**: Redirects to `httpbin.org` for HTTP testing
 3. **Live Mode**: Sends actual SMS via MessageMedia API
 
-### Build Verification
-
-Before publishing or deploying, verify the package artifacts:
-
-```bash
-# Install dependencies (Node.js 20 required)
-nvm use 20
-npm ci
-
-# Build and verify compilation
-npm run build
-
-# Create a test package tarball
-npm pack
-
-# Inspect tarball contents
-tar -tzf n8n-nodes-sms-sender-*.tgz
-
-# Verify key artifacts are present:
-# - dist/nodes/SinchEngage/*.js
-# - dist/credentials/*.js
-# - dist/nodes/SinchEngage/sinch-logo.png
-# - package.json, README.md, LICENSE
-```
-
-**Expected tarball contents:**
-- Compiled JavaScript + TypeScript declarations (`.js`, `.d.ts`)
-- Icon assets (`sinch-logo.png`)
-- Essential docs (`README.md`, `LICENSE`, `CHANGELOG.md`)
-- No source TypeScript files (`.ts`)
-- No `node_modules` or dev dependencies
-
 ## 🛠️ Development
 
 ### Running Locally
