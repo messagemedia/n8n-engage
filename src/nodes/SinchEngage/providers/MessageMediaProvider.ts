@@ -1,6 +1,7 @@
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { ProviderStrategy } from './ProviderStrategy';
 import { ProviderHttpError } from '../../../utils/errors';
+import { makeMessageMediaRequest } from '../../../utils/messageMediaHttp';
 
 interface MessageMediaCredentials {
   apiKey: string;
@@ -28,7 +29,17 @@ export class MessageMediaProvider implements ProviderStrategy {
     const { to, from, message, testMode, helpers } = params;
     const { apiKey, apiSecret } = params.credentials as unknown as MessageMediaCredentials;
 
-    const url = testMode ? 'https://httpbin.org/post' : 'https://api.messagemedia.com/v1/messages';
+    // Avoid external network dependency in test mode; return synthetic response
+    if (testMode) {
+      return {
+        status: 'queued',
+        providerMessageId: 'test-mode-message-id',
+        raw: { simulated: true, environment: 'testMode' },
+        meta: { skippedNetwork: true },
+      };
+    }
+
+    const url = 'https://api.messagemedia.com/v1/messages';
 
     // Build message object - only include source_number if from is provided
     const messageObj: Record<string, unknown> = {
@@ -46,15 +57,12 @@ export class MessageMediaProvider implements ProviderStrategy {
     };
 
     try {
-      const response = await helpers.request({
+      // Cast helpers to provide access to context for shared utility
+      const context = { helpers, getCredentials: async () => ({ apiKey, apiSecret }) } as any;
+      const response = await makeMessageMediaRequest(context, {
         method: 'POST',
-        uri: url,
-        json: true,
+        url,
         body,
-        auth: { user: apiKey, pass: apiSecret },
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
 
       const raw = response as Record<string, unknown>;

@@ -7,11 +7,7 @@ import type {
   NodeConnectionType,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
-
-interface MessageMediaCredentials {
-  apiKey: string;
-  apiSecret: string;
-}
+import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
 
 interface WebhookData {
   webhookId?: string;
@@ -33,14 +29,17 @@ interface IncomingSmsPayload {
   metadata?: Record<string, unknown>;
 }
 
-export class SmsSenderTrigger implements INodeType {
+// NOTE: Removed native https helper. All outbound calls must use this.helpers.httpRequest
+
+export class SinchEngageTrigger implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Sinch Engage',
-    name: 'smsSenderTrigger',
+    displayName: 'Sinch Engage Trigger',
+    name: 'sinchEngageTrigger',
     icon: 'file:sinch-logo.png',
     group: ['trigger'],
     version: 1,
-    description: 'Triggers workflow when SMS is received via Sinch Engage',
+    subtitle: '={{$parameter["eventType"]}}',
+    description: 'Receive SMS messages via Sinch Engage webhook',
     defaults: {
       name: 'Sinch Engage',
     },
@@ -85,26 +84,35 @@ export class SmsSenderTrigger implements INodeType {
         const webhookId = webhookData.webhookId;
 
         if (!webhookId) {
+          (this as any).logger?.debug?.('SinchEngageTrigger.checkExists: No webhook ID stored');
           return false;
         }
 
-        const credentials = (await this.getCredentials('messageMediaApi')) as MessageMediaCredentials;
+        const checkUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
+
+  (this as any).logger?.info?.('SinchEngageTrigger: Checking if webhook exists', {
+          webhookId,
+          checkUrl,
+        });
 
         try {
           // Check if webhook still exists using stored ID
-          await this.helpers.request({
+          const response = await makeMessageMediaRequest(this, {
             method: 'GET',
-            uri: `https://api.messagemedia.com/v1/webhooks/${webhookId}`,
-            auth: {
-              user: credentials.apiKey,
-              pass: credentials.apiSecret,
-            },
-            json: true,
+            url: checkUrl,
           });
 
+          (this as any).logger?.info?.('SinchEngageTrigger: Webhook exists', { webhookId, response });
           return true;
         } catch (error) {
-          // Webhook doesn't exist or API error
+          const err = error as { statusCode?: number; message?: string };
+          (this as any).logger?.warn?.('SinchEngageTrigger: Webhook does not exist or error checking', {
+            statusCode: err.statusCode,
+            message: err.message,
+            webhookId,
+          });
+
+          // Webhook doesn't exist or API error - clean up stale data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
           return false;
@@ -113,35 +121,40 @@ export class SmsSenderTrigger implements INodeType {
 
       async create(this: IHookFunctions): Promise<boolean> {
         const webhookUrl = this.getNodeWebhookUrl('default');
-        const credentials = (await this.getCredentials('messageMediaApi')) as MessageMediaCredentials;
         const webhookData = this.getWorkflowStaticData('node') as WebhookData;
+        const requestUrl = 'https://api.messagemedia.com/v1/webhooks/messages';
+        const requestBody = {
+          url: webhookUrl,
+          method: 'POST',
+          encoding: 'JSON',
+          events: ['RECEIVED_SMS'],
+        };
 
         try {
-          // Register webhook with MessageMedia for incoming SMS
-          const response = (await this.helpers.request({
+          const response = await makeMessageMediaRequest<MessageMediaWebhookResponse>(this, {
             method: 'POST',
-            uri: 'https://api.messagemedia.com/v1/webhooks',
-            auth: {
-              user: credentials.apiKey,
-              pass: credentials.apiSecret,
-            },
-            body: {
-              url: webhookUrl,
-              events: ['RECEIVED_SMS'],
-            },
-            json: true,
-          })) as MessageMediaWebhookResponse;
+            url: requestUrl,
+            body: requestBody,
+          });
 
-          // Store webhook ID for later deletion
+          (this as any).logger?.info?.('✅ SinchEngageTrigger: Webhook created successfully', {
+            webhookId: response.id,
+            registeredUrl: response.url,
+            events: response.events,
+          });
+
           webhookData.webhookId = response.id;
           webhookData.webhookUrl = webhookUrl;
-
           return true;
-        } catch (error: unknown) {
-          const err = error as { statusCode?: number; message?: string; error?: unknown };
+        } catch (error: any) {
+          (this as any).logger?.error?.('💥 SinchEngageTrigger: Webhook creation failed via httpRequest', {
+            message: error.message,
+            stack: error.stack?.substring(0, 200),
+          });
+
           throw new NodeApiError(this.getNode(), {
-            message: `Failed to create webhook: ${err.message || 'Unknown error'}`,
-            description: `Status: ${err.statusCode || 'unknown'}`,
+            message: 'Failed to create webhook',
+            description: error.message,
           });
         }
       },
@@ -151,22 +164,25 @@ export class SmsSenderTrigger implements INodeType {
         const webhookId = webhookData.webhookId;
 
         if (!webhookId) {
+          (this as any).logger?.debug?.('SinchEngageTrigger.delete: No webhook ID to delete');
           return true; // Nothing to delete
         }
 
-        const credentials = (await this.getCredentials('messageMediaApi')) as MessageMediaCredentials;
+  const deleteUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
+
+  (this as any).logger?.info?.('SinchEngageTrigger: Deleting webhook', {
+          webhookId,
+          deleteUrl,
+        });
 
         try {
-          // Delete webhook from MessageMedia
-          await this.helpers.request({
+          // Delete webhook from MessageMedia using standardized helper
+          await makeMessageMediaRequest(this, {
             method: 'DELETE',
-            uri: `https://api.messagemedia.com/v1/webhooks/${webhookId}`,
-            auth: {
-              user: credentials.apiKey,
-              pass: credentials.apiSecret,
-            },
-            json: true,
+            url: deleteUrl,
           });
+
+          (this as any).logger?.info?.('SinchEngageTrigger: Webhook deleted successfully', { webhookId });
 
           // Clean up static data
           delete webhookData.webhookId;
@@ -177,14 +193,22 @@ export class SmsSenderTrigger implements INodeType {
           // Log error but don't fail - webhook might already be deleted
           const err = error as { statusCode?: number; message?: string };
           
+          (this as any).logger?.warn?.('SinchEngageTrigger: Error deleting webhook', {
+            statusCode: err.statusCode,
+            message: err.message,
+            webhookId,
+          });
+          
           // If 404, webhook already deleted
           if (err.statusCode === 404) {
+            (this as any).logger?.info?.('SinchEngageTrigger: Webhook already deleted (404), cleaning up');
             delete webhookData.webhookId;
             delete webhookData.webhookUrl;
             return true;
           }
 
           // For other errors, still clean up local data
+          (this as any).logger?.info?.('SinchEngageTrigger: Cleaning up webhook data despite error');
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
           
@@ -216,6 +240,46 @@ export class SmsSenderTrigger implements INodeType {
       receivedAt: bodyData.date_received,
       metadata: bodyData.metadata || {},
       raw: bodyData, // Include raw payload for advanced use cases
+    };
+
+    return {
+      workflowData: [
+        [
+          {
+            json: returnData,
+          },
+        ],
+      ],
+    };
+  }
+
+  /**
+   * Provides sample test event data for manual testing
+   * This is called when user clicks "Listen for test event" or "Fetch test event"
+   */
+  async manualTriggerFunction(this: IHookFunctions): Promise<IWebhookResponseData> {
+    // Sample incoming SMS payload that mimics what MessageMedia would send
+    const samplePayload: IncomingSmsPayload = {
+      id: 'sample-msg-' + Math.random().toString(36).substring(7),
+      date_received: new Date().toISOString(),
+      destination_number: '+1234567890',
+      source_number: '+61437536808',
+      message_content: 'This is a sample test SMS message from MessageMedia',
+      metadata: {
+        sample: true,
+        testEvent: 'manual-trigger',
+      },
+    };
+
+    // Format the same way as the real webhook
+    const returnData = {
+      messageId: samplePayload.id,
+      from: samplePayload.source_number,
+      to: samplePayload.destination_number,
+      message: samplePayload.message_content,
+      receivedAt: samplePayload.date_received,
+      metadata: samplePayload.metadata || {},
+      raw: samplePayload,
     };
 
     return {

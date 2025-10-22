@@ -1,11 +1,8 @@
-import { SmsSender } from './nodes/SmsSender/SmsSender.node';
+import { SinchEngage } from './nodes/SinchEngage/SinchEngage.node';
+import { SinchEngageTrigger } from './nodes/SinchEngage/SinchEngageTrigger.node';
 import { MessageMediaApi } from './credentials/MessageMediaApi.credentials';
 
-export const nodes = [SmsSender];
-export const credentials = [MessageMediaApi];
-
-// Also export as default for n8n compatibility
 export default {
-  nodes: [SmsSender],
+  nodes: [SinchEngage, SinchEngageTrigger],
   credentials: [MessageMediaApi],
 };

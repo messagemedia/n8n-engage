@@ -13,7 +13,6 @@ export interface SmsMeta {
   cost: SmsMetaCost;
   encoding: 'GSM7' | 'UCS-2';
   queuedAt: string; // ISO-8601
-  rateLimitAppliedMs: number;
 }
 
 export interface SmsOutputItem {
@@ -24,7 +23,6 @@ export interface SmsOutputItem {
   status: SmsStatus;
   providerMessageId: string | null;
   error: string | null;
-  raw?: unknown;
   meta: SmsMeta;
 }
 
