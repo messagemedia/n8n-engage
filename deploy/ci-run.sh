@@ -93,10 +93,25 @@ case "${STEP}" in
 
       echo '[npm] Installing dependencies with verbose output and timeout...'
       # Use timeout to prevent hanging (10 minutes for install)
-      if command -v timeout >/dev/null 2>&1; then
-        timeout 600 npm ci --no-audit --no-fund --verbose
-      else
+      # Alpine Linux might not have timeout command, so use a different approach
+      (
         npm ci --no-audit --no-fund --verbose
+      ) &
+      NPM_PID=$!
+
+      # Wait for npm to complete or timeout after 10 minutes
+      if command -v timeout >/dev/null 2>&1; then
+        timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+      else
+        # Fallback: wait with background timeout check
+        (
+          sleep 600
+          echo '[npm] Installation timed out after 10 minutes'
+          kill -TERM $NPM_PID 2>/dev/null
+        ) &
+        TIMEOUT_PID=$!
+        wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
+        kill -TERM $TIMEOUT_PID 2>/dev/null
       fi
 
       echo '[npm] Installation completed successfully'
@@ -114,7 +129,24 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        # Use timeout protection for npm ci
+        (
+          npm ci --no-audit --no-fund --verbose
+        ) &
+        NPM_PID=$!
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+        else
+          (
+            sleep 600
+            echo '[npm] Installation timed out after 10 minutes'
+            kill -TERM $NPM_PID 2>/dev/null
+          ) &
+          TIMEOUT_PID=$!
+          wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
+          kill -TERM $TIMEOUT_PID 2>/dev/null
+        fi
       fi
       echo '[lint] Running linter...'
       npm run lint
@@ -131,7 +163,24 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        # Use timeout protection for npm ci
+        (
+          npm ci --no-audit --no-fund --verbose
+        ) &
+        NPM_PID=$!
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+        else
+          (
+            sleep 600
+            echo '[npm] Installation timed out after 10 minutes'
+            kill -TERM $NPM_PID 2>/dev/null
+          ) &
+          TIMEOUT_PID=$!
+          wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
+          kill -TERM $TIMEOUT_PID 2>/dev/null
+        fi
       fi
       echo '[build] Compiling TypeScript...'
       npm run build
@@ -151,7 +200,24 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        # Use timeout protection for npm ci
+        (
+          npm ci --no-audit --no-fund --verbose
+        ) &
+        NPM_PID=$!
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+        else
+          (
+            sleep 600
+            echo '[npm] Installation timed out after 10 minutes'
+            kill -TERM $NPM_PID 2>/dev/null
+          ) &
+          TIMEOUT_PID=$!
+          wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
+          kill -TERM $TIMEOUT_PID 2>/dev/null
+        fi
       fi
       echo '[test] Running test suite...'
       npm test
@@ -176,7 +242,24 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 600 npm ci --no-audit --no-fund --verbose
+        # Use timeout protection for npm ci
+        (
+          npm ci --no-audit --no-fund --verbose
+        ) &
+        NPM_PID=$!
+
+        if command -v timeout >/dev/null 2>&1; then
+          timeout 600 wait $NPM_PID || (echo '[npm] Installation timed out after 10 minutes' && kill -TERM $NPM_PID 2>/dev/null && exit 124)
+        else
+          (
+            sleep 600
+            echo '[npm] Installation timed out after 10 minutes'
+            kill -TERM $NPM_PID 2>/dev/null
+          ) &
+          TIMEOUT_PID=$!
+          wait $NPM_PID || (kill -TERM $TIMEOUT_PID 2>/dev/null && exit 124)
+          kill -TERM $TIMEOUT_PID 2>/dev/null
+        fi
       fi
       echo '[release] Configuring npm registry...'
       echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
