@@ -17,7 +17,8 @@ CACHE_DIR=".ci-npm-cache"
 mkdir -p "${CACHE_DIR}" || true
 
 # Compose base docker command with optimized caching
-DOCKER_CMD=(docker run --rm --platform linux/amd64 \
+# Use native platform for better compatibility, especially on ARM64 agents
+DOCKER_CMD=(docker run --rm \
   -v "$(pwd):${WORKDIR}" \
   -w "${WORKDIR}" \
   -e CI=1 \
@@ -102,9 +103,9 @@ case "${STEP}" in
       fi
 
       echo '[npm] Installing dependencies (optimized for speed)...'
-      # Use faster install options with reasonable timeout (8 minutes)
+      # Use faster install options with extended timeout for CI reliability
       if command -v timeout >/dev/null 2>&1; then
-        timeout 480 npm ci --no-audit --no-fund --prefer-offline
+        timeout 600 npm ci --no-audit --no-fund --prefer-offline
       else
         npm ci --no-audit --no-fund --prefer-offline
       fi
@@ -124,7 +125,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 480 npm ci --no-audit --no-fund --prefer-offline
+        timeout 600 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[lint] Running linter...'
       npm run lint
@@ -141,7 +142,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 480 npm ci --no-audit --no-fund --prefer-offline
+        timeout 600 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[build] Compiling TypeScript...'
       npm run build
@@ -161,7 +162,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 480 npm ci --no-audit --no-fund --prefer-offline
+        timeout 600 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[test] Running test suite...'
       npm test
@@ -186,7 +187,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 480 npm ci --no-audit --no-fund --prefer-offline
+        timeout 600 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[release] Configuring npm registry...'
       echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
