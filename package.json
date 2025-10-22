@@ -1,7 +1,7 @@
 {
-  "name": "na10-nodes-sinch-engage-dev",
+  "name": "n8n-nodes-sinch-engage-dev",
   "version": "1.0.0-alpha-0",
-  "description": "n8n community node to send SMS via MessageMedia",
+  "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node",
     "n8n-nodes",
@@ -28,6 +28,9 @@
   },
   "files": [
     "dist/**/*",
+    "src/**/*",
+    "tests/**/*",
+    "examples/**/*",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"

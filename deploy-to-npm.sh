@@ -9,8 +9,21 @@ echo "🚀 n8n-nodes-sinch-engage NPM Deployment"
 echo "========================================"
 
 # Check if we're in the right directory
-if [[ ! -f "package.json" ]] || [[ "$(grep -o '"name": "na10-nodes-sinch-engage-dev"' package.json)" == "" ]]; then
-    echo "❌ Error: Please run this script from the n8n-engage project root directory"
+if [[ ! -f "package.json" ]]; then
+    echo "❌ Error: package.json not found. Run from project root."
+    exit 1
+fi
+
+# Validate package name against expected development or production variants
+PACKAGE_NAME=$(grep '"name"' package.json | cut -d'"' -f4)
+EXPECTED_DEV_NAME="n8n-nodes-sinch-engage-dev"
+EXPECTED_ALT_DEV_NAME="na10-nodes-sinch-engage-dev" # legacy documented name
+EXPECTED_PROD_NAME="@sinch-engage/n8n-nodes-sinch-engage"
+
+if [[ "$PACKAGE_NAME" != "$EXPECTED_DEV_NAME" && "$PACKAGE_NAME" != "$EXPECTED_ALT_DEV_NAME" && "$PACKAGE_NAME" != "$EXPECTED_PROD_NAME" ]]; then
+    echo "❌ Error: Unexpected package name '$PACKAGE_NAME'." >&2
+    echo "   Acceptable names: $EXPECTED_DEV_NAME | $EXPECTED_ALT_DEV_NAME | $EXPECTED_PROD_NAME" >&2
+    echo "   Update package.json 'name' or adjust script expectations before deploying." >&2
     exit 1
 fi
 
@@ -22,6 +35,11 @@ fi
 
 # Function to prompt for NPM token
 get_npm_token() {
+    # If already logged in (npm whoami succeeds), skip token prompt
+    if npm whoami >/dev/null 2>&1; then
+        echo "🔐 Using existing npm authentication: $(npm whoami)"
+        return 0
+    fi
     if [[ -z "$NPM_TOKEN" ]]; then
         echo ""
         echo "🔑 NPM Authentication Required"
@@ -42,8 +60,13 @@ get_npm_token() {
 setup_npm() {
     echo ""
     echo "🔧 Configuring NPM..."
-    echo "Setting NPM token..."
-    npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
+    # Only set auth token if not already logged-in
+    if ! npm whoami >/dev/null 2>&1; then
+        echo "Setting NPM token..."
+        npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
+    else
+        echo "Already authenticated as $(npm whoami). Skipping token config."
+    fi
 
     # Verify NPM is configured
     echo "Verifying NPM configuration..."
