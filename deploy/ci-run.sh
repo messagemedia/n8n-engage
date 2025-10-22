@@ -101,9 +101,9 @@ case "${STEP}" in
       fi
 
       echo '[npm] Installing dependencies (optimized for speed)...'
-      # Use faster install options and reduced timeout for efficiency
+      # Use faster install options with reasonable timeout (8 minutes)
       if command -v timeout >/dev/null 2>&1; then
-        timeout 300 npm ci --no-audit --no-fund --prefer-offline
+        timeout 480 npm ci --no-audit --no-fund --prefer-offline
       else
         npm ci --no-audit --no-fund --prefer-offline
       fi
@@ -123,7 +123,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 300 npm ci --no-audit --no-fund --prefer-offline
+        timeout 480 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[lint] Running linter...'
       npm run lint
@@ -140,7 +140,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 300 npm ci --no-audit --no-fund --prefer-offline
+        timeout 480 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[build] Compiling TypeScript...'
       npm run build
@@ -160,7 +160,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 300 npm ci --no-audit --no-fund --prefer-offline
+        timeout 480 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[test] Running test suite...'
       npm test
@@ -185,7 +185,7 @@ case "${STEP}" in
           echo '[npm] Clearing corrupted cache...'
           npm cache clean --force
         fi
-        timeout 300 npm ci --no-audit --no-fund --prefer-offline
+        timeout 480 npm ci --no-audit --no-fund --prefer-offline
       fi
       echo '[release] Configuring npm registry...'
       echo '//registry.npmjs.org/:_authToken=${NPM_TOKEN}' > .npmrc
