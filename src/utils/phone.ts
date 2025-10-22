@@ -1,11 +1,13 @@
 // Require Google's libphonenumber - same as Zapier implementation
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const PNF = require('google-libphonenumber').PhoneNumberFormat;
 
 export type SmsEncoding = 'GSM7' | 'UCS-2';
 
 const GSM7_BASIC_CHARS =
-  "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞ\u0020!\"#¤%&'()*+,\-.\/0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
+  "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞ\u0020!\"#¤%&'()*+,-./ 0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
 const GSM7_EXTENDED_CHARS = "^{}\\[~]|€";
 
 function isGsm7Character(char: string): boolean {

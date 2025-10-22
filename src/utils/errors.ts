@@ -12,7 +12,7 @@ export class ProviderHttpError extends Error {
 
 export function redactValue(value: unknown): unknown {
   if (value == null) return value;
-  if (typeof value === 'string') return value.replace(/[A-Za-z0-9+\/=]{8,}/g, '***');
+  if (typeof value === 'string') return value.replace(/[A-Za-z0-9+/=]{8,}/g, '***');
   if (Array.isArray(value)) return value.map((v) => redactValue(v));
   if (typeof value === 'object') {
     const out: Record<string, unknown> = {};
