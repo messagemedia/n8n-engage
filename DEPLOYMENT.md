@@ -150,6 +150,38 @@ npm version patch  # or minor/major
 
 **Note**: For scoped packages in organizations, ensure your NPM token has the appropriate organization permissions.
 
+### NPM Version Management & Unpublishing
+
+#### ⚠️ Unpublishing Limitations
+- **72-hour window only**: You can unpublish a version within 72 hours of publishing
+- **Dependency restriction**: Cannot unpublish if other packages depend on it
+- **No empty packages**: Cannot unpublish the last remaining version of a package
+- **After 72 hours**: Versions become permanent and cannot be removed
+
+#### ✅ Recommended Strategy for Development
+```bash
+# Use alpha tags for iterative development (current approach)
+npm publish --tag alpha  # 1.0.0-alpha-0, 1.0.0-alpha-1, etc.
+
+# When ready for production
+npm publish --tag latest # 1.0.0
+
+# Later: Deprecate old alphas (not delete)
+npm deprecate @sinch-engage/n8n-nodes-sinch-engage@"*alpha*" "Use stable v1.0.0"
+```
+
+#### 🔄 Version Iteration Strategy
+```bash
+# For development iterations (no 72-hour worry)
+npm version prerelease --preid=alpha  # Increments: alpha-0, alpha-1, etc.
+
+# For quick fixes during development
+npm version prerelease --preid=alpha # Safe iterative development
+
+# When satisfied with stability
+npm version patch  # Removes pre-release for GA: 1.0.0
+```
+
 ## Security Considerations
 
 ### NPM Access Tokens
