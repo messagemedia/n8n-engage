@@ -92,7 +92,7 @@ publish_package() {
     fi
 
     # Publish with alpha tag
-    npm publish --tag alpha
+    npm publish --tag alpha --access public
 
     if [[ $? -eq 0 ]]; then
         echo ""
