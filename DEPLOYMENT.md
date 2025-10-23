@@ -169,7 +169,7 @@ npm install na10-nodes-sinch-engage-dev@alpha
 
 ### 3. Test in n8n
 1. **Install in n8n**: Use the Community Nodes interface
-2. **Configure Credentials**: Add MessageMedia API credentials
+2. **Configure Credentials**: Add Sinch Engage  API credentials
 3. **Test Workflow**: Create a simple SMS workflow
 4. **Verify Functionality**: Test sandbox mode first, then live mode
 

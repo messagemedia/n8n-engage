@@ -23,7 +23,7 @@ This is the first alpha release focused on n8n verification compliance and estab
 ### Changed
 - **[BREAKING - Internal]** All HTTP requests now use `this.helpers.httpRequest` for n8n platform compliance
 - Migrated trigger node webhook methods to use shared HTTP utility
-- Refactored MessageMedia provider to use platform networking helpers
+- Refactored Sinch Engage  provider to use platform networking helpers
 - Updated main node (account numbers, blacklist API) to use shared utility
 - All tests now mock at helper level instead of network level
 
@@ -55,7 +55,7 @@ npm install n8n-nodes-sms-sender@alpha
 ### Added
 - Comprehensive tooltips (hints) on all 9 fields (4 core fields + 5 additional fields)
 - Inline examples and usage guidance for each field
-- Direct links to MessageMedia API documentation (SMS API, Delivery Reports)
+- Direct links to Sinch Engage  API documentation (SMS API, Delivery Reports)
 - Character encoding explanations (GSM7 vs UCS-2, segment limits)
 - Webhook setup instructions for delivery status callbacks
 - Best practices recommendations (auto-detect encoding, rate limiting)
@@ -91,7 +91,7 @@ npm install n8n-nodes-sms-sender@alpha
 - Add a sender dropdown list for quick number selection
 
 ## 1.0.8 - Initial Release
-- Add SMS Sender node with MessageMedia as a provider
+- Add SMS Sender node with Sinch Engage  as a provider
 - Add credentials for provider
 - Add phone normalization and encoding detection
 - Add tests and example workflow
