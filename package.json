@@ -6,10 +6,12 @@
     "n8n-community-node",
     "n8n-nodes",
     "sms",
-    "messagemedia"
+    "messagemedia",
+    "sinch-engage",
+    "sinch"
   ],
   "license": "MIT",
-  "author": "Community Contributors",
+  "author": "Sinch Engage",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
