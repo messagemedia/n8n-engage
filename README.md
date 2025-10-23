@@ -3,7 +3,7 @@
 Community node for n8n to send SMS via Sinch Engage  with a clean, focused interface.
 
 ## ✨ Features
-- **Sinch Engage  SMS integration** - SMS provider with global reach `https://messagemedia.com`
+- **Sinch Engage  SMS integration** - SMS provider with global reach `https://sinch.com/engage/`
 - **Clean, simple UI** - No complex provider selection or credential confusion
 - **Optional sender number** - Uses default account number if "From" field is blank
 - **Phone number normalization** to E.164 format and encoding detection (GSM7 vs UCS-2)
@@ -188,11 +188,6 @@ Before submitting a pull request:
 - **Encoding detection** (GSM7 vs UCS-2) for optimal delivery
 - **Validation** with helpful error messages
 
-### Rate Limiting
-- **Configurable delays** between messages
-- **Prevents API throttling** and improves delivery success
-- **Millisecond precision** for fine-grained control
-
 ## 📦 Version History
 
 See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
@@ -234,6 +229,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
-- **Sinch Engage  Website**: [https://messagemedia.com](https://messagemedia.com)
+- **Sinch Engage  Website**: [https://sinch.com/engage/](https://sinch.com/engage)
 - **Sinch Engage  API Documentation**: [https://messagemedia.github.io/documentation/](https://messagemedia.github.io/documentation/)
 - **n8n Community Nodes**: [https://n8n.io/community/nodes/](https://n8n.io/community/nodes/)
