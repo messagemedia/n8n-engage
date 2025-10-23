@@ -19,19 +19,3 @@ steps:
     key: test
     agents:
       queue: "connectors-stg-ap-southeast-2"
-
-  - wait
-
-  - block: "Manual approval required to deploy release"
-    if: build.branch == "main"
-    depends_on: test
-    key: release-approval
-
-  - label: ":rocket: Release (main only)"
-    if: build.branch == "main"
-    depends_on: release-approval
-    key: release
-    commands:
-      - "bash deploy/ci-run.sh release"
-    agents:
-      queue: "connectors-stg-ap-southeast-2"
