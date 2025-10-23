@@ -1,32 +1,18 @@
-# n8n-nodes-sms-sender
+# n8n-nodes-sinch-engage
 
-Community node for n8n to send SMS via Sinch Engage  with a clean, focused interface.
+Community node for n8n to send SMS via Sinch Engage with a clean, focused interface.
 
 ## ✨ Features
-- **Sinch Engage  SMS integration** - SMS provider with global reach `https://sinch.com/engage/`
+- **Sinch Engage SMS integration** - SMS provider with global reach `https://sinch.com/engage/`
 - **Clean, simple UI** - No complex provider selection or credential confusion
 - **Optional sender number** - Uses default account number if "From" field is blank
 - **Phone number normalization** to E.164 format and encoding detection (GSM7 vs UCS-2)
-- **Test mode** (stub endpoint) and sandbox dry-run
-- **Rate limiting** between messages
 - **Robust error handling** and validation
-
-## 🚀 Install
-
-### Option 1: n8n Community Nodes (Recommended)
-1. In n8n, go to **Settings** → **Community Nodes** → **Install**
-2. Enter: `n8n-nodes-sms-sender`
-3. Click **Install**
-
-### Option 2: npm CLI
-```bash
-npm i n8n-nodes-sms-sender
-```
 
 ## 🎯 Node Configuration
 
 ### Basic Information
-- **Display Name**: Sinch Engage  SMS Sender
+- **Display Name**: Sinch Engage
 - **Name**: `SinchEngage`
 - **Group**: `transform`
 - **Inputs**: `main`
@@ -36,8 +22,8 @@ npm i n8n-nodes-sms-sender
 
 The node provides a clean, focused interface with logical field organization:
 
-#### 1. **Sinch Engage  API Credentials**
-- **Required**: Sinch Engage  API Key and Secret
+#### 1. **Sinch Engage API Credentials**
+- **Required**: Sinch Engage API Key and Secret
 - **Single credential field** - No confusion about which credentials to use
 
 #### 2. **Message Details**
@@ -45,11 +31,7 @@ The node provides a clean, focused interface with logical field organization:
 - **From** (optional) - Sender phone number (uses default account number if blank)
 - **Message** (required, up to 1600 characters) - SMS content
 
-#### 3. **Operation Modes**
-- **Use Sandbox** - Dry run mode, no external calls, simulated success
-- **Test Mode** - Redirects to `https://httpbin.org/post` for testing
-
-#### 4. **Additional Fields**
+#### 3. **Additional Fields**
 - **Status Callback URL** - Webhook URL for delivery status updates
 - **Encoding**: auto | GSM7 | UCS-2 (auto-detects by default)
 - **Rate Limit (ms)** - Delay between messages
@@ -58,11 +40,11 @@ The node provides a clean, focused interface with logical field organization:
 
 ## 🔐 Credentials
 
-### Sinch Engage  API
-- `apiKey` - Your Sinch Engage  API Key
-- `apiSecret` - Your Sinch Engage  API Secret
+### Sinch Engage API
+- `apiKey` - Your Sinch Engage API Key
+- `apiSecret` - Your Sinch Engage API Secret
 
-## 📱 Sinch Engage  Integration
+## 📱 Sinch Engage Integration
 
 ### API Endpoint
 - **URL**: `POST https://api.messagemedia.com/v1/messages`
@@ -88,7 +70,7 @@ The node provides a clean, focused interface with logical field organization:
 
 ### When "From" field is blank:
 - ✅ No source_number sent to API
-- ✅ Sinch Engage  uses default account number
+- ✅ Sinch Engage uses default account number
 - ✅ Ideal for single-account setups
 
 ## 📋 Example Workflow
@@ -106,68 +88,17 @@ The node provides a clean, focused interface with logical field organization:
       },
       "type": "n8n-nodes-sms-sender.SinchEngage",
       "typeVersion": 1,
-      "name": "Sinch Engage  SMS Sender"
+      "name": "Sinch Engage SMS Sender"
     }
   ]
 }
 ```
 
-## 🧪 Testing
-
-### Local Testing
-```bash
-npm test
-```
-
-### n8n Testing
-1. **Sandbox Mode**: Returns simulated success without external calls
-2. **Test Mode**: Redirects to `httpbin.org` for HTTP testing
-3. **Live Mode**: Sends actual SMS via Sinch Engage  API
-
-## 🛠️ Development
-
-### Running Locally
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run linting
-npm run lint
-
-# Auto-fix linting issues
-npm run lint:fix
-
-# Run tests
-npm test
-
-# Watch mode for tests
-npm run dev:test
-```
-
-### Code Quality
-This project uses ESLint with TypeScript support to maintain code quality and consistency:
-- **Configuration**: `.eslintrc.json` with `@typescript-eslint/parser`
-- **Standards**: TypeScript recommended rules + Prettier integration
-- **Enforcement**: CI/CD pipeline enforces zero warnings (`--max-warnings=0`)
-
-### Contributing
-Before submitting a pull request:
-1. Run `npm run lint` to check for linting issues
-2. Run `npm run lint:fix` to automatically fix common issues
-3. Run `npm test` to ensure all tests pass
-4. Run `npm run build` to verify the build completes successfully
-
 ## 🛠️ Troubleshooting
 
 ### Common Issues
-- **401/403**: Check Sinch Engage  API credentials and permissions
+- **401/403**: Check Sinch Engage API credentials and permissions
 - **Invalid numbers**: Ensure E.164 format like `+61437536808`
-- **Sandbox vs Test Mode**: 
-  - **Sandbox**: Returns fake success without any HTTP call
-  - **Test Mode**: Calls stub endpoint (`httpbin.org`)
 - **Missing "From"**: Node automatically uses default account number
 
 ### Phone Number Format
@@ -177,7 +108,7 @@ Before submitting a pull request:
 
 ## 🔧 Technical Details
 
-### Sinch Engage  API Integration
+### Sinch Engage API Integration
 - **Endpoint**: `https://api.messagemedia.com/v1/messages`
 - **Authentication**: Basic auth with API Key/Secret
 - **Request Format**: JSON with messages array
@@ -221,7 +152,7 @@ This package follows semantic versioning with pre-release tags:
 
 ## 🤝 Contributing
 
-This is a community node for n8n, focused on providing a clean, reliable Sinch Engage  SMS integration. Feel free to contribute improvements, bug fixes, or enhancements!
+This is a community node for n8n, focused on providing a clean, reliable Sinch Engage SMS integration. Feel free to contribute improvements, bug fixes, or enhancements!
 
 ## 📄 License
 
@@ -229,6 +160,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🔗 Links
 
-- **Sinch Engage  Website**: [https://sinch.com/engage/](https://sinch.com/engage)
-- **Sinch Engage  API Documentation**: [https://messagemedia.github.io/documentation/](https://messagemedia.github.io/documentation/)
+- **Sinch Engage Website**: [https://sinch.com/engage/](https://sinch.com/engage)
+- **Sinch Engage API Documentation**: [https://messagemedia.github.io/documentation/](https://messagemedia.github.io/documentation/)
 - **n8n Community Nodes**: [https://n8n.io/community/nodes/](https://n8n.io/community/nodes/)
