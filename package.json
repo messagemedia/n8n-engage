@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-sinch-engage-dev",
+  "name": "@sinch-engage/n8n-nodes-sinch-engage",
   "version": "1.0.0-alpha-1",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
