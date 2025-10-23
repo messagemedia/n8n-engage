@@ -123,11 +123,18 @@ export class SinchEngageTrigger implements INodeType {
         const webhookUrl = this.getNodeWebhookUrl('default');
         const webhookData = this.getWorkflowStaticData('node') as WebhookData;
         const requestUrl = 'https://api.messagemedia.com/v1/webhooks/messages';
+
+        // Define template to match expected IncomingSmsPayload structure
+        // Following Zapier's approach to ensure predictable webhook payload
+        const template = '{"id": "$!moId","date_received": "$receivedTimestamp","destination_number": "$!destinationAddress","source_number": "$!sourceAddress","message_content": "$esc.json($replyContent)","metadata":{#foreach($key in $metadata.keySet())"$key" : "$esc.json($metadata.get($key))"#if( $velocityHasNext ), #end#end}}';
+
         const requestBody = {
           url: webhookUrl,
           method: 'POST',
           encoding: 'JSON',
-          events: ['RECEIVED_SMS'],
+          headers: { "Source": "n8n" },
+          events: ['RECEIVED_SMS', 'RECEIVED_MMS'],
+          template: template,
         };
 
         try {
