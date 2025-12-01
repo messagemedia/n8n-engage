@@ -10,21 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **⚠️ ALPHA RELEASE**
 
-### Changed
-
-- Replaced `i18n-iso-countries` dependency with custom country code utilities
-- Replaced `google-libphonenumber` dependency with custom phone validation utilities
-- All dependencies removed from package.json to comply with n8n community node requirements
-
 ### Fixed
 
 - Added author email to package.json for n8n creators hub compatibility
-
-### Removed
-
-- Removed `i18n-iso-countries` external dependency
-- Removed `google-libphonenumber` external dependency
-- Removed unused `mustache` dependency
 
 
 ## [1.0.0-alpha-3] - 2025-12-01
