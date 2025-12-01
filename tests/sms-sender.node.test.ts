@@ -13,8 +13,8 @@ vi.mock('n8n-workflow', async () => {
   } as any;
 });
 
-import { detectEncoding, normalizePhoneNumberToE164 } from '../src/utils/phone';
-import { MessageMediaProvider } from '../src/nodes/SinchEngage/providers/MessageMediaProvider';
+import { detectEncoding, normalizePhoneNumberToE164 } from '../utils/phone';
+import { MessageMediaProvider } from '../nodes/SinchEngage/providers/MessageMediaProvider';
 
 const helpers: any = {
   request: async (opts: any) => {
