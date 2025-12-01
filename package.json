@@ -41,7 +41,10 @@
   },
   "files": [
     "dist/**/*",
-    "src/**/*",
+    "nodes/**/*",
+    "credentials/**/*",
+    "utils/**/*",
+    "index.ts",
     "tests/**/*",
     "examples/**/*",
     "README.md",
@@ -50,9 +53,9 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f src/nodes/SinchEngage/*.png src/nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
+    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f nodes/SinchEngage/*.png nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
+    "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
+    "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run",
     "dev:test": "vitest",
     "prepare": "npm run build"
