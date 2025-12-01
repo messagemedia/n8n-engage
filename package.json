@@ -15,6 +15,14 @@
     "name": "Sinch Engage",
     "email": "ecosystems@sinch.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/messagemedia/n8n-engage.git"
+  },
+  "bugs": {
+    "url": "https://github.com/messagemedia/n8n-engage/issues"
+  },
+  "homepage": "https://github.com/messagemedia/n8n-engage#readme",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
