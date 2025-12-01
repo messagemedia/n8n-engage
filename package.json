@@ -11,7 +11,10 @@
     "sinch"
   ],
   "license": "MIT",
-  "author": "Sinch Engage",
+  "author": {
+    "name": "Sinch Engage",
+    "email": "support@messagemedia.com"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
