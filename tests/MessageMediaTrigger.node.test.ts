@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SinchEngageTrigger } from '../src/nodes/SinchEngage/SinchEngageTrigger.node';
+import { SinchEngageTrigger } from '../nodes/SinchEngage/SinchEngageTrigger.node';
 import type { IHookFunctions, IWebhookFunctions } from 'n8n-workflow';
 
 describe('SinchEngageTrigger', () => {
