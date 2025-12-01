@@ -1,6 +1,6 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha-2",
+  "version": "1.0.0-alpha-5",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node",
@@ -11,7 +11,10 @@
     "sinch"
   ],
   "license": "MIT",
-  "author": "Sinch Engage",
+  "author": {
+    "name": "Sinch Engage",
+    "email": "ecosystems@sinch.com"
+  },
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -46,13 +49,8 @@
     "dev:test": "vitest",
     "prepare": "npm run build"
   },
-  "dependencies": {
-    "google-libphonenumber": "^3.2.43",
-    "i18n-iso-countries": "^7.14.0",
-    "mustache": "^4.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/mustache": "^4.2.5",
     "@types/node": "^20.14.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",

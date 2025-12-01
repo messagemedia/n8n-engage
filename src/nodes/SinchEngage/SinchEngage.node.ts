@@ -12,16 +12,11 @@ import { normalizePhoneNumberToE164, detectEncoding } from '../../utils/phone';
 import type { SmsOutputItem, EncodingOption } from './types';
 import { MessageMediaProvider } from './providers/MessageMediaProvider';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
-import * as countries from 'i18n-iso-countries';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import enLocale = require('i18n-iso-countries/langs/en.json');
-
-// Register English locale for country names
-countries.registerLocale(enLocale);
+import { getNames } from '../../utils/countryCodes';
 
 // Generate country list for dropdown (sorted alphabetically by name)
 function getCountryOptions() {
-  const countryList = countries.getNames('en', { select: 'official' });
+  const countryList = getNames();
   return Object.entries(countryList)
     .map(([code, name]) => ({
       name: `${name} (${code})`,

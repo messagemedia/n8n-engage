@@ -1,8 +1,4 @@
-// Require Google's libphonenumber - same as Zapier implementation
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const PNF = require('google-libphonenumber').PhoneNumberFormat;
+import { parsePhoneNumber, isValidNumber, format } from './phoneValidation';
 
 export type SmsEncoding = 'GSM7' | 'UCS-2';
 
@@ -68,10 +64,10 @@ export function normalizePhoneNumberToE164(
 
   try {
     // Parse the number with the country code
-    const number = phoneUtil.parseAndKeepRawInput(trimmed, defaultCountry || undefined);
+    const number = parsePhoneNumber(trimmed, defaultCountry || undefined);
 
     // Validate the parsed number (this prevents false positives like 0220450450 → +61220450450)
-    if (!phoneUtil.isValidNumber(number)) {
+    if (!isValidNumber(number)) {
       return {
         ok: false,
         error: defaultCountry
@@ -81,7 +77,7 @@ export function normalizePhoneNumberToE164(
     }
 
     // Format to E.164
-    const e164Number = phoneUtil.format(number, PNF.E164);
+    const e164Number = format(number);
     return { ok: true, value: e164Number };
 
   } catch (error) {
