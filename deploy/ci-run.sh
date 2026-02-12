@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Optimized dockerized Node 20 CI runner for n8n engage community connector
+# Optimized dockerized Node 24 CI runner for n8n engage community connector
 # Usage: ./deploy/ci-run.sh <install|lint|build|test|release>
 # Uses persistent container with cached dependencies for better performance
 
@@ -11,7 +11,7 @@ if [[ -z "${STEP}" ]]; then
   exit 2
 fi
 
-IMAGE="node:20-alpine"
+IMAGE="node:24-alpine"
 WORKDIR="/workspace"
 CACHE_DIR=".ci-npm-cache"
 mkdir -p "${CACHE_DIR}" || true
