@@ -1,6 +1,6 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha-2",
+  "version": "1.0.0-alpha-8",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node",
@@ -11,7 +11,18 @@
     "sinch"
   ],
   "license": "MIT",
-  "author": "Sinch Engage",
+  "author": {
+    "name": "Sinch Engage",
+    "email": "ecosystems@sinch.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/messagemedia/n8n-engage.git"
+  },
+  "bugs": {
+    "url": "https://github.com/messagemedia/n8n-engage/issues"
+  },
+  "homepage": "https://github.com/messagemedia/n8n-engage#readme",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,7 +32,7 @@
       "dist/nodes/SinchEngage/SinchEngageTrigger.node.js"
     ],
     "credentials": [
-      "dist/credentials/MessageMediaApi.credentials.js"
+      "dist/credentials/MessageMediaApi.credential.js"
     ]
   },
   "directories": {
@@ -30,7 +41,10 @@
   },
   "files": [
     "dist/**/*",
-    "src/**/*",
+    "nodes/**/*",
+    "credentials/**/*",
+    "utils/**/*",
+    "index.ts",
     "tests/**/*",
     "examples/**/*",
     "README.md",
@@ -39,20 +53,15 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f src/nodes/SinchEngage/*.png src/nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
+    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f nodes/SinchEngage/*.png nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
+    "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
+    "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run",
     "dev:test": "vitest",
     "prepare": "npm run build"
   },
-  "dependencies": {
-    "google-libphonenumber": "^3.2.43",
-    "i18n-iso-countries": "^7.14.0",
-    "mustache": "^4.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/mustache": "^4.2.5",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",

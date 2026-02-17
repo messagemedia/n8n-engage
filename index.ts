@@ -1,6 +1,6 @@
 import { SinchEngage } from './nodes/SinchEngage/SinchEngage.node';
 import { SinchEngageTrigger } from './nodes/SinchEngage/SinchEngageTrigger.node';
-import { MessageMediaApi } from './credentials/MessageMediaApi.credentials';
+import { MessageMediaApi } from './credentials/MessageMediaApi.credential';
 
 export default {
   nodes: [SinchEngage, SinchEngageTrigger],
