@@ -452,7 +452,7 @@ export class SinchEngage implements INodeType {
                 queuedAt,
               },
             };
-            returnData.push({ json: output as unknown as IDataObject });
+            returnData.push({ json: output as unknown as IDataObject, pairedItem: { item: itemIndex } });
           } catch (error) {
             const e = error as Error;
             throw new NodeApiError(this.getNode(), { message: e.message });
@@ -501,6 +501,7 @@ export class SinchEngage implements INodeType {
                 numbers: normalizedNumbers,
                 response,
               } as unknown as IDataObject,
+              pairedItem: { item: itemIndex },
             });
           } catch (error) {
             const e = error as Error;
