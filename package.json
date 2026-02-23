@@ -1,9 +1,9 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha-8",
+  "version": "1.0.0-alpha-10",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
-    "n8n-community-node",
+    "n8n-community-node-package",
     "n8n-nodes",
     "sms",
     "messagemedia",
@@ -76,8 +76,7 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "n8n-core": ">=1.0.0",
-    "n8n-workflow": ">=1.0.0"
+    "n8n-workflow": "*"
   },
   "engines": {
     "node": ">=20.19 <=24.x"
