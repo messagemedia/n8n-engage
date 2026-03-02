@@ -84,34 +84,20 @@ export class SinchEngageTrigger implements INodeType {
         const webhookId = webhookData.webhookId;
 
         if (!webhookId) {
-          (this as any).logger?.debug?.('SinchEngageTrigger.checkExists: No webhook ID stored');
           return false;
         }
 
         const checkUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
 
-  (this as any).logger?.info?.('SinchEngageTrigger: Checking if webhook exists', {
-          webhookId,
-          checkUrl,
-        });
-
         try {
           // Check if webhook still exists using stored ID
-          const response = await makeMessageMediaRequest(this, {
+          await makeMessageMediaRequest(this, {
             method: 'GET',
             url: checkUrl,
           });
 
-          (this as any).logger?.info?.('SinchEngageTrigger: Webhook exists', { webhookId, response });
           return true;
         } catch (error) {
-          const err = error as { statusCode?: number; message?: string };
-          (this as any).logger?.warn?.('SinchEngageTrigger: Webhook does not exist or error checking', {
-            statusCode: err.statusCode,
-            message: err.message,
-            webhookId,
-          });
-
           // Webhook doesn't exist or API error - clean up stale data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
@@ -144,21 +130,10 @@ export class SinchEngageTrigger implements INodeType {
             body: requestBody,
           });
 
-          (this as any).logger?.info?.('✅ SinchEngageTrigger: Webhook created successfully', {
-            webhookId: response.id,
-            registeredUrl: response.url,
-            events: response.events,
-          });
-
           webhookData.webhookId = response.id;
           webhookData.webhookUrl = webhookUrl;
           return true;
         } catch (error: any) {
-          (this as any).logger?.error?.('💥 SinchEngageTrigger: Webhook creation failed via httpRequest', {
-            message: error.message,
-            stack: error.stack?.substring(0, 200),
-          });
-
           throw new NodeApiError(this.getNode(), {
             message: 'Failed to create webhook',
             description: error.message,
@@ -171,16 +146,10 @@ export class SinchEngageTrigger implements INodeType {
         const webhookId = webhookData.webhookId;
 
         if (!webhookId) {
-          (this as any).logger?.debug?.('SinchEngageTrigger.delete: No webhook ID to delete');
           return true; // Nothing to delete
         }
 
-  const deleteUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
-
-  (this as any).logger?.info?.('SinchEngageTrigger: Deleting webhook', {
-          webhookId,
-          deleteUrl,
-        });
+        const deleteUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
 
         try {
           // Delete webhook from MessageMedia using standardized helper
@@ -189,33 +158,22 @@ export class SinchEngageTrigger implements INodeType {
             url: deleteUrl,
           });
 
-          (this as any).logger?.info?.('SinchEngageTrigger: Webhook deleted successfully', { webhookId });
-
           // Clean up static data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
 
           return true;
         } catch (error: unknown) {
-          // Log error but don't fail - webhook might already be deleted
           const err = error as { statusCode?: number; message?: string };
-          
-          (this as any).logger?.warn?.('SinchEngageTrigger: Error deleting webhook', {
-            statusCode: err.statusCode,
-            message: err.message,
-            webhookId,
-          });
-          
+
           // If 404, webhook already deleted
           if (err.statusCode === 404) {
-            (this as any).logger?.info?.('SinchEngageTrigger: Webhook already deleted (404), cleaning up');
             delete webhookData.webhookId;
             delete webhookData.webhookUrl;
             return true;
           }
 
           // For other errors, still clean up local data
-          (this as any).logger?.info?.('SinchEngageTrigger: Cleaning up webhook data despite error');
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
           

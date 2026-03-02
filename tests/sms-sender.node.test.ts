@@ -17,12 +17,12 @@ import { detectEncoding, normalizePhoneNumberToE164 } from '../utils/phone';
 import { MessageMediaProvider } from '../nodes/SinchEngage/providers/MessageMediaProvider';
 
 const helpers: any = {
-  request: async (opts: any) => {
+  httpRequest: async (opts: any) => {
     const fetch = await import('node-fetch');
-    const res = await (fetch.default as any)(opts.uri, {
+    const res = await (fetch.default as any)(opts.url, {
       method: opts.method || 'GET',
       headers: opts.headers,
-      body: opts.form ? new URLSearchParams(opts.form).toString() : opts.json ? JSON.stringify(opts.body) : opts.body,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
     const text = await res.text();
     try {

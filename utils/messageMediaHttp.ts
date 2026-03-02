@@ -2,7 +2,7 @@ import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions } from 'n
 
 /**
  * Shared HTTP helper for MessageMedia API requests.
- * Ensures all requests use platform-level networking (httpRequest or request fallback)
+ * Ensures all requests use platform-level networking (httpRequest)
  * with consistent auth, headers, and timeout settings.
  *
  * @param context - The n8n function context (IHookFunctions, IExecuteFunctions, etc.)
@@ -33,15 +33,9 @@ export async function makeMessageMediaRequest<T = any>(
     apiSecret: string;
   };
 
-  // Use httpRequest if available (n8n 1.0+), otherwise fall back to request
-  const http = (context.helpers as any).httpRequest ?? (context.helpers as any).request;
-
-  // Build request with consistent configuration
-  const response = await http({
+  const response = await context.helpers.httpRequest({
     method: options.method,
     url: options.url,
-    uri: options.url, // backward compat for test mocks using .request
-    json: true,
     body: options.body,
     qs: options.qs,
     auth: {
@@ -52,7 +46,7 @@ export async function makeMessageMediaRequest<T = any>(
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    timeout: 15000, // 15s timeout for all MessageMedia requests
+    timeout: 15000,
   });
 
   return response as T;

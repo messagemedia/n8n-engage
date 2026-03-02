@@ -45,7 +45,7 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(),
+            httpRequest: vi.fn(),
           },
         } as unknown as IHookFunctions;
 
@@ -62,7 +62,7 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(async () => ({
+            httpRequest: vi.fn(async () => ({
               id: 'webhook-123',
               url: 'https://n8n.example.com/webhook/abc',
             })),
@@ -72,7 +72,7 @@ describe('SinchEngageTrigger', () => {
         const exists = await triggerNode.webhookMethods.default.checkExists.call(mockContext);
         expect(exists).toBe(true);
         // Ensure helper was invoked
-        expect((mockContext.helpers.request as any).mock.calls.length).toBe(1);
+        expect((mockContext.helpers.httpRequest as any).mock.calls.length).toBe(1);
       });
 
       it('should return false and clear data when webhook does not exist', async () => {
@@ -84,7 +84,7 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(async () => {
+            httpRequest: vi.fn(async () => {
               throw { statusCode: 404, message: 'Not found' };
             }),
           },
@@ -108,7 +108,7 @@ describe('SinchEngageTrigger', () => {
           })),
           getWorkflowStaticData: vi.fn(() => mockWebhookData),
           helpers: {
-            request: vi.fn(async () => ({
+            httpRequest: vi.fn(async () => ({
               id: 'webhook-123',
               url: 'https://n8n.example.com/webhook/abc',
               events: ['RECEIVED_SMS'],
@@ -121,7 +121,7 @@ describe('SinchEngageTrigger', () => {
         expect(result).toBe(true);
         expect(mockWebhookData.webhookId).toBe('webhook-123');
         expect(mockWebhookData.webhookUrl).toBe('https://n8n.example.com/webhook/abc');
-        expect((mockContext.helpers.request as any).mock.calls.length).toBe(1);
+        expect((mockContext.helpers.httpRequest as any).mock.calls.length).toBe(1);
       });
 
       it('should throw NodeApiError on creation failure', async () => {
@@ -133,7 +133,7 @@ describe('SinchEngageTrigger', () => {
           })),
           getWorkflowStaticData: vi.fn(() => ({})),
           helpers: {
-            request: vi.fn(async () => {
+            httpRequest: vi.fn(async () => {
               throw { statusCode: 401, message: 'Unauthorized' };
             }),
           },
@@ -156,7 +156,7 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(async () => ({})),
+            httpRequest: vi.fn(async () => ({})),
           },
         } as unknown as IHookFunctions;
 
@@ -164,7 +164,7 @@ describe('SinchEngageTrigger', () => {
         expect(result).toBe(true);
         expect(mockWebhookData.webhookId).toBeUndefined();
         expect(mockWebhookData.webhookUrl).toBeUndefined();
-        expect((mockContext.helpers.request as any).mock.calls.length).toBe(1);
+        expect((mockContext.helpers.httpRequest as any).mock.calls.length).toBe(1);
       });
 
       it('should return true if no webhookId is stored', async () => {
@@ -175,13 +175,13 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(),
+            httpRequest: vi.fn(),
           },
         } as unknown as IHookFunctions;
 
         const result = await triggerNode.webhookMethods.default.delete.call(mockContext);
         expect(result).toBe(true);
-        expect(mockContext.helpers.request).not.toHaveBeenCalled();
+        expect(mockContext.helpers.httpRequest).not.toHaveBeenCalled();
       });
 
       it('should handle 404 errors gracefully', async () => {
@@ -193,7 +193,7 @@ describe('SinchEngageTrigger', () => {
             apiSecret: 'test-secret',
           })),
           helpers: {
-            request: vi.fn(async () => {
+            httpRequest: vi.fn(async () => {
               throw { statusCode: 404, message: 'Not found' };
             }),
           },
