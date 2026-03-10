@@ -1,6 +1,6 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha-11",
+  "version": "1.0.0-alpha-13",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node-package",
@@ -35,18 +35,8 @@
       "dist/credentials/MessageMediaApi.credential.js"
     ]
   },
-  "directories": {
-    "example": "examples",
-    "test": "tests"
-  },
   "files": [
     "dist/**/*",
-    "nodes/**/*",
-    "credentials/**/*",
-    "utils/**/*",
-    "index.ts",
-    "tests/**/*",
-    "examples/**/*",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -80,12 +70,5 @@
   },
   "engines": {
     "node": ">=20.19 <=24.x"
-  },
-  "overrides": {
-    "axios": "1.13.5",
-    "fast-xml-parser": "5.3.6",
-    "minimatch": "10.2.1",
-    "qs": "6.14.2",
-    "@langchain/core": "1.1.14"
   }
 }
