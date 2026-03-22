@@ -4,7 +4,6 @@ import type {
   INodeType,
   INodeTypeDescription,
   IWebhookResponseData,
-  NodeConnectionType,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
@@ -35,7 +34,7 @@ export class SinchEngageTrigger implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Engage Trigger',
     name: 'sinchEngageTrigger',
-    icon: 'file:sinch-logo.png',
+    icon: 'file:sinch-logo.svg',
     group: ['trigger'],
     version: 1,
     subtitle: '={{$parameter["eventType"]}}',
@@ -44,7 +43,7 @@ export class SinchEngageTrigger implements INodeType {
       name: 'Sinch Engage',
     },
     inputs: [],
-    outputs: ['main' as NodeConnectionType],
+    outputs: ['main'],
     credentials: [
       {
         name: 'messageMediaApi',

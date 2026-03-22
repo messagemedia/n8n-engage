@@ -10,6 +10,9 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:n8n-nodes-base/nodes",
+    "plugin:n8n-nodes-base/credentials",
+    "plugin:n8n-nodes-base/community",
     "prettier"
   ],
   "rules": {

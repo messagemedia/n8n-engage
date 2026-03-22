@@ -3,7 +3,6 @@ import type {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
-  NodeConnectionType,
   IDataObject,
   ILoadOptionsFunctions,
 } from 'n8n-workflow';
@@ -29,7 +28,7 @@ export class SinchEngage implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Engage',
     name: 'sinchEngage',
-    icon: 'file:sinch-logo.png',
+    icon: 'file:sinch-logo.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -37,8 +36,8 @@ export class SinchEngage implements INodeType {
     defaults: {
       name: 'Sinch Engage',
     },
-    inputs: ['main' as NodeConnectionType],
-    outputs: ['main' as NodeConnectionType],
+    inputs: ['main'],
+    outputs: ['main'],
     credentials: [
       { name: 'messageMediaApi', required: true },
     ],
@@ -127,7 +126,6 @@ export class SinchEngage implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Country for parsing local phone numbers (e.g., "0437 536 808" → "+61437536808" if Australia selected). Required for local/national format numbers without + prefix.',
         placeholder: 'Select a country...',
         displayOptions: {
@@ -138,15 +136,14 @@ export class SinchEngage implements INodeType {
         },
       },
       {
-        displayName: 'From',
+        displayName: 'From Name or ID',
         name: 'from',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getAccountNumbers',
         },
         default: '',
-        required: false,
-        description: 'Sender phone number. Leave empty to use account default number.',
+        description: 'Sender phone number. Leave empty to use account default number. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
         displayOptions: {
           show: {
             resource: ['sms'],
@@ -194,7 +191,6 @@ export class SinchEngage implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Country for parsing local phone numbers without international prefix',
         placeholder: 'Select a country...',
         displayOptions: {
@@ -231,7 +227,7 @@ export class SinchEngage implements INodeType {
             name: 'encoding',
             type: 'options',
             options: [
-              { name: 'Auto-detect', value: 'auto' },
+              { name: 'Auto-Detect', value: 'auto' },
               { name: 'GSM7', value: 'GSM7' },
               { name: 'UCS-2', value: 'UCS-2' },
             ],
