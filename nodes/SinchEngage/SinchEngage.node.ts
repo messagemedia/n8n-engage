@@ -373,59 +373,59 @@ export class SinchEngage implements INodeType {
     const credentials = (await this.getCredentials('messageMediaApi')) as unknown as Record<string, string>;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-      const resource = this.getNodeParameter('resource', itemIndex) as string;
-      const operation = this.getNodeParameter('operation', itemIndex) as string;
+      try {
+        const resource = this.getNodeParameter('resource', itemIndex) as string;
+        const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-      if (resource === 'sms') {
-        if (operation === 'send') {
-          // SEND SMS OPERATION
-          const toRaw = this.getNodeParameter('to', itemIndex) as string;
-          const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
-          const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
-          
-          const message = this.getNodeParameter('message', itemIndex) as string;
+        if (resource === 'sms') {
+          if (operation === 'send') {
+            // SEND SMS OPERATION
+            const toRaw = this.getNodeParameter('to', itemIndex) as string;
+            const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
+            const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
 
-          const additional = this.getNodeParameter('additionalFields', itemIndex, {}) as {
-            statusCallbackUrl?: string;
-            encoding?: EncodingOption;
-          };
+            const message = this.getNodeParameter('message', itemIndex) as string;
 
-          const encoding = detectEncoding(message, additional.encoding || 'auto');
+            const additional = this.getNodeParameter('additionalFields', itemIndex, {}) as {
+              statusCallbackUrl?: string;
+              encoding?: EncodingOption;
+            };
 
-          if (message.length === 0 || message.length > 1600) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'Message must be between 1 and 1600 characters',
-            });
-          }
+            const encoding = detectEncoding(message, additional.encoding || 'auto');
 
-          const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
-          
-          // Handle from field - if empty, skip normalization (will use default account number)
-          let fromResult: { ok: boolean; value: string; error?: string };
-          if (!fromRaw || fromRaw.trim() === '') {
-            fromResult = { ok: true, value: '' };
-          } else {
-            const normalized = normalizePhoneNumberToE164(fromRaw, defaultCountry);
-            if (normalized.ok) {
-              fromResult = { ok: true, value: normalized.value };
-            } else {
-              fromResult = { ok: false, value: fromRaw, error: normalized.error };
+            if (message.length === 0 || message.length > 1600) {
+              throw new NodeApiError(this.getNode(), {
+                message: 'Message must be between 1 and 1600 characters',
+              }, { itemIndex });
             }
-          }
 
-          // Always throw error if phone number validation fails
-          if (!toResult.ok || !fromResult.ok) {
-            let errMsg: string | undefined;
-            if (!toResult.ok) errMsg = toResult.error;
-            if (!fromResult.ok) errMsg = fromResult.error;
-            throw new NodeApiError(this.getNode(), { message: `Invalid phone number: ${errMsg}` });
-          }
+            const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
 
-          const queuedAt = new Date().toISOString();
+            // Handle from field - if empty, skip normalization (will use default account number)
+            let fromResult: { ok: boolean; value: string; error?: string };
+            if (!fromRaw || fromRaw.trim() === '') {
+              fromResult = { ok: true, value: '' };
+            } else {
+              const normalized = normalizePhoneNumberToE164(fromRaw, defaultCountry);
+              if (normalized.ok) {
+                fromResult = { ok: true, value: normalized.value };
+              } else {
+                fromResult = { ok: false, value: fromRaw, error: normalized.error };
+              }
+            }
 
-          const strategy = new MessageMediaProvider();
+            // Always throw error if phone number validation fails
+            if (!toResult.ok || !fromResult.ok) {
+              let errMsg: string | undefined;
+              if (!toResult.ok) errMsg = toResult.error;
+              if (!fromResult.ok) errMsg = fromResult.error;
+              throw new NodeApiError(this.getNode(), { message: `Invalid phone number: ${errMsg}` }, { itemIndex });
+            }
 
-          try {
+            const queuedAt = new Date().toISOString();
+
+            const strategy = new MessageMediaProvider();
+
             const providerResult = await strategy.send({
               to: toResult.ok ? toResult.value : toRaw,
               from: fromResult.ok ? fromResult.value : fromRaw,
@@ -453,38 +453,33 @@ export class SinchEngage implements INodeType {
               },
             };
             returnData.push({ json: output as unknown as IDataObject, pairedItem: { item: itemIndex } });
-          } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
           }
-        }
-      } else if (resource === 'blacklist') {
-        if (operation === 'add') {
-          // ADD TO BLACKLIST OPERATION
-          const numbersRaw = this.getNodeParameter('blacklistNumbers', itemIndex) as string;
-          const blacklistCountry = this.getNodeParameter('blacklistCountry', itemIndex, '') as string || undefined;
+        } else if (resource === 'blacklist') {
+          if (operation === 'add') {
+            // ADD TO BLACKLIST OPERATION
+            const numbersRaw = this.getNodeParameter('blacklistNumbers', itemIndex) as string;
+            const blacklistCountry = this.getNodeParameter('blacklistCountry', itemIndex, '') as string || undefined;
 
-          // Parse and normalize phone numbers (one per line)
-          const lines = numbersRaw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-          
-          if (lines.length === 0) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'At least one phone number is required',
-            });
-          }
+            // Parse and normalize phone numbers (one per line)
+            const lines = numbersRaw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-          const normalizedNumbers: string[] = [];
-          for (const line of lines) {
-            const result = normalizePhoneNumberToE164(line, blacklistCountry);
-            if (!result.ok) {
+            if (lines.length === 0) {
               throw new NodeApiError(this.getNode(), {
-                message: `Invalid phone number "${line}": ${result.error}`,
-              });
+                message: 'At least one phone number is required',
+              }, { itemIndex });
             }
-            normalizedNumbers.push(result.value);
-          }
 
-          try {
+            const normalizedNumbers: string[] = [];
+            for (const line of lines) {
+              const result = normalizePhoneNumberToE164(line, blacklistCountry);
+              if (!result.ok) {
+                throw new NodeApiError(this.getNode(), {
+                  message: `Invalid phone number "${line}": ${result.error}`,
+                }, { itemIndex });
+              }
+              normalizedNumbers.push(result.value);
+            }
+
             // Call MessageMedia blacklist API
             const response = await makeMessageMediaRequest(this, {
               method: 'POST',
@@ -503,11 +498,18 @@ export class SinchEngage implements INodeType {
               } as unknown as IDataObject,
               pairedItem: { item: itemIndex },
             });
-          } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: `Failed to add numbers to blacklist: ${e.message}` });
           }
         }
+      } catch (error) {
+        if (this.continueOnFail()) {
+          const e = error as Error;
+          returnData.push({
+            json: { error: e.message },
+            pairedItem: { item: itemIndex },
+          });
+          continue;
+        }
+        throw error;
       }
     }
 
