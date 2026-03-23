@@ -7,7 +7,8 @@ import type {
 
 export class MessageMediaApi implements ICredentialType {
   name = 'messageMediaApi';
-  displayName = 'MessageMedia API';
+  // eslint-disable-next-line n8n-nodes-base/cred-class-field-display-name-miscased
+  displayName = 'Sinch Engage API';
   icon = 'file:../nodes/SinchEngage/sinch-logo.svg' as const;
   // eslint-disable-next-line n8n-nodes-base/cred-class-field-documentation-url-miscased
   documentationUrl = 'https://developers.messagemedia.com';
