@@ -2,6 +2,15 @@
 
 Community node for n8n to send SMS via Sinch Engage with a clean, focused interface.
 
+## Installation
+
+1. In your n8n instance, go to **Settings > Community Nodes**
+2. Click **Install a community node**
+3. Enter: `@sinch-engage/n8n-nodes-sinch-engage`
+4. Click **Install**
+
+**Compatibility**: Requires n8n version 1.0.0 or later.
+
 ## ✨ Features
 - **Sinch Engage SMS integration** - SMS provider with global reach `https://sinch.com/engage/`
 - **Clean, simple UI** - No complex provider selection or credential confusion
