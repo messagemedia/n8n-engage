@@ -456,7 +456,6 @@ export class SinchEngage implements INodeType {
               providerMessageId: providerResult.providerMessageId ?? null,
               error: providerResult.error ?? null,
               meta: {
-                cost: { currency: 'USD', amount: 0 },
                 encoding,
                 queuedAt,
               },
