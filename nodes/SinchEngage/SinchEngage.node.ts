@@ -508,7 +508,7 @@ export class SinchEngage implements INodeType {
         if (error instanceof NodeApiError) {
           throw error;
         }
-        throw new NodeApiError(this.getNode(), error as Error, { itemIndex });
+        throw new NodeApiError(this.getNode(), { message: (error as Error).message }, { itemIndex });
       }
     }
 
