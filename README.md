@@ -86,7 +86,7 @@ The node provides a clean, focused interface with logical field organization:
           "statusCallbackUrl": "https://your-webhook.com/sms-status"
         }
       },
-      "type": "n8n-nodes-sms-sender.SinchEngage",
+      "type": "@sinch-engage/n8n-nodes-sinch-engage.sinchEngage",
       "typeVersion": 1,
       "name": "Sinch Engage SMS Sender"
     }
@@ -130,19 +130,19 @@ This package follows semantic versioning with pre-release tags:
 - **Alpha** (`1.x.x-alpha.x`) - Internal testing and development builds
   - Experimental features and breaking changes
   - For team testing in isolated n8n instances
-  - Install: `npm install n8n-nodes-sms-sender@alpha`
-  
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage@alpha`
+
 - **Beta** (`1.x.x-beta.x`) - Public preview releases
   - Feature-complete but undergoing final testing
   - Safe for non-production workflows
-  - Install: `npm install n8n-nodes-sms-sender@beta`
-  
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage@beta`
+
 - **General Availability** (`1.x.x`) - Production-ready releases
   - Stable, fully tested, and verified by n8n
   - Recommended for production use
-  - Install: `npm install n8n-nodes-sms-sender` (latest stable)
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage` (latest stable)
 
-**Current Version**: `1.1.0-alpha.0` - Alpha testing phase
+**Current Version**: `1.0.0-alpha-14` - Alpha testing phase
 
 ### Version Strategy
 - **Major** (x.0.0): Breaking changes, major feature overhauls
