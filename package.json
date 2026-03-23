@@ -50,6 +50,7 @@
     "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run",
     "dev:test": "vitest",
+    "prepublishOnly": "npm run build && npm run lint",
     "prepare": "npm run build"
   },
   "devDependencies": {
