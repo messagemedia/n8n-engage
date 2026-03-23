@@ -126,6 +126,7 @@ export class SinchEngage implements INodeType {
         type: 'string',
         required: true,
         default: '',
+        placeholder: 'e.g. +61437536808',
         description: 'Destination phone number (E.164 preferred, e.g., +61437536808, or local format like 0437536808 requires Country field)',
         displayOptions: {
           show: {
@@ -141,7 +142,7 @@ export class SinchEngage implements INodeType {
         options: getCountryOptions(),
         default: '',
         description: 'Country for parsing local phone numbers (e.g., "0437 536 808" → "+61437536808" if Australia selected). Required for local/national format numbers without + prefix.',
-        placeholder: 'Select a country...',
+        placeholder: 'e.g. Australia',
         displayOptions: {
           show: {
             resource: ['sms'],
@@ -172,6 +173,7 @@ export class SinchEngage implements INodeType {
         typeOptions: { rows: 3 },
         required: true,
         default: '',
+        placeholder: 'e.g. Hello from n8n!',
         description: 'Message to send, up to 1600 characters. GSM7 encoding (standard characters) allows ~160 chars per SMS segment. Unicode/emoji uses UCS-2 encoding (~70 chars per segment). Longer messages are automatically split into multiple segments.',
         displayOptions: {
           show: {
@@ -206,7 +208,7 @@ export class SinchEngage implements INodeType {
         options: getCountryOptions(),
         default: '',
         description: 'Country for parsing local phone numbers without international prefix',
-        placeholder: 'Select a country...',
+        placeholder: 'e.g. Australia',
         displayOptions: {
           show: {
             resource: ['blacklist'],
