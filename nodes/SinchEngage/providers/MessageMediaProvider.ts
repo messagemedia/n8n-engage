@@ -3,11 +3,6 @@ import { ProviderStrategy } from './ProviderStrategy';
 import { ProviderHttpError } from '../../../utils/errors';
 import { makeMessageMediaRequest } from '../../../utils/messageMediaHttp';
 
-interface MessageMediaCredentials {
-  apiKey: string;
-  apiSecret: string;
-}
-
 export class MessageMediaProvider implements ProviderStrategy {
   async send(params: {
     to: string;
@@ -17,8 +12,7 @@ export class MessageMediaProvider implements ProviderStrategy {
     encoding?: 'auto' | 'GSM7' | 'UCS-2';
     testMode?: boolean;
     providerRegion?: string;
-    helpers: IExecuteFunctions['helpers'];
-    credentials: Record<string, string>;
+    context: IExecuteFunctions;
   }): Promise<{
     status: 'queued' | 'sent' | 'failed';
     providerMessageId?: string;
@@ -26,8 +20,7 @@ export class MessageMediaProvider implements ProviderStrategy {
     error?: string;
     meta?: Record<string, unknown>;
   }> {
-    const { to, from, message, testMode, helpers } = params;
-    const { apiKey, apiSecret } = params.credentials as unknown as MessageMediaCredentials;
+    const { to, from, message, testMode, context } = params;
 
     // Avoid external network dependency in test mode; return synthetic response
     if (testMode) {
@@ -57,8 +50,6 @@ export class MessageMediaProvider implements ProviderStrategy {
     };
 
     try {
-      // Cast helpers to provide access to context for shared utility
-      const context = { helpers, getCredentials: async () => ({ apiKey, apiSecret }) } as any;
       const response = await makeMessageMediaRequest(context, {
         method: 'POST',
         url,

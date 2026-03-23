@@ -366,7 +366,6 @@ export class SinchEngage implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('messageMediaApi')) as unknown as Record<string, string>;
     const strategy = new MessageMediaProvider();
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
@@ -429,8 +428,7 @@ export class SinchEngage implements INodeType {
               encoding: additional.encoding || 'auto',
               testMode: false,
               providerRegion: undefined, // MessageMedia does not have a region concept
-              helpers: this.helpers,
-              credentials,
+              context: this,
             });
 
             const output: SmsOutputItem = {
