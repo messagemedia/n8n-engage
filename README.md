@@ -43,9 +43,6 @@ The node provides a clean, focused interface with logical field organization:
 #### 3. **Additional Fields**
 - **Status Callback URL** - Webhook URL for delivery status updates
 - **Encoding**: auto | GSM7 | UCS-2 (auto-detects by default)
-- **Rate Limit (ms)** - Delay between messages
-- **Fail if Undeliverable** (default: true) - Throw error if validation fails
-- **Return Raw** (default: false) - Include provider response in output
 
 ## 🔐 Credentials
 
