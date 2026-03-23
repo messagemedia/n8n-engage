@@ -505,7 +505,10 @@ export class SinchEngage implements INodeType {
           });
           continue;
         }
-        throw error;
+        if (error instanceof NodeApiError) {
+          throw error;
+        }
+        throw new NodeApiError(this.getNode(), error as Error, { itemIndex });
       }
     }
 
