@@ -4,7 +4,6 @@ import type {
   INodeType,
   INodeTypeDescription,
   IWebhookResponseData,
-  NodeConnectionType,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
@@ -35,16 +34,16 @@ export class SinchEngageTrigger implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Engage Trigger',
     name: 'sinchEngageTrigger',
-    icon: 'file:sinch-logo.png',
+    icon: 'file:sinch-logo.svg',
     group: ['trigger'],
     version: 1,
     subtitle: '={{$parameter["eventType"]}}',
     description: 'Receive SMS messages via Sinch Engage webhook',
     defaults: {
-      name: 'Sinch Engage',
+      name: 'Sinch Engage Trigger',
     },
     inputs: [],
-    outputs: ['main' as NodeConnectionType],
+    outputs: ['main'],
     credentials: [
       {
         name: 'messageMediaApi',
@@ -133,10 +132,11 @@ export class SinchEngageTrigger implements INodeType {
           webhookData.webhookId = response.id;
           webhookData.webhookUrl = webhookUrl;
           return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { message?: string };
           throw new NodeApiError(this.getNode(), {
-            message: 'Failed to create webhook',
-            description: error.message,
+            message: 'Unable to register webhook with Sinch Engage',
+            description: 'Check your API credentials and ensure webhooks are enabled on your Sinch Engage account. Error: ' + (err.message || 'Unknown error'),
           });
         }
       },

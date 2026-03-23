@@ -10,12 +10,15 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:n8n-nodes-base/nodes",
+    "plugin:n8n-nodes-base/credentials",
+    "plugin:n8n-nodes-base/community",
     "prettier"
   ],
   "rules": {
-    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "off"
+    "no-console": "error"
   },
   "ignorePatterns": ["dist/", "node_modules/", "tests/"]
 }

@@ -4,13 +4,7 @@ export type ProviderName = 'MessageMedia';
 export type EncodingOption = 'auto' | 'GSM7' | 'UCS-2';
 export type SmsStatus = 'queued' | 'sent' | 'failed';
 
-export interface SmsMetaCost {
-  currency: string;
-  amount: number;
-}
-
 export interface SmsMeta {
-  cost: SmsMetaCost;
   encoding: 'GSM7' | 'UCS-2';
   queuedAt: string; // ISO-8601
 }
@@ -34,8 +28,7 @@ export interface ProviderSendParams {
   encoding?: 'auto' | 'GSM7' | 'UCS-2';
   testMode?: boolean;
   providerRegion?: string;
-  helpers: IExecuteFunctions['helpers'];
-  credentials: Record<string, string>;
+  context: IExecuteFunctions;
 }
 
 export interface ProviderSendResult {

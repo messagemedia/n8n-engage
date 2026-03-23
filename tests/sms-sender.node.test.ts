@@ -46,6 +46,13 @@ const helpers: any = {
   },
 };
 
+function makeContext(h: any): any {
+  return {
+    helpers: h,
+    getCredentials: async () => ({ apiKey: 'k', apiSecret: 's' }),
+  };
+}
+
 describe('phone utils', () => {
   it('normalizes E.164 and rejects local', () => {
     expect(normalizePhoneNumberToE164('+14155552671')).toEqual({ ok: true, value: '+14155552671' });
@@ -74,8 +81,7 @@ describe('MessageMediaProvider', () => {
       to: '+15551234567',
       from: '+15557654321',
       message: 'Hello',
-      helpers,
-      credentials: { apiKey: 'k', apiSecret: 's' },
+      context: makeContext(helpers),
     });
     expect(res.status).toBe('queued');
     expect(res.providerMessageId).toBe('mm123');
@@ -91,8 +97,7 @@ describe('test mode synthetic response', () => {
       to: '+1',
       from: '+2',
       message: 'Hi',
-      helpers: { httpRequest: vi.fn(), request: vi.fn() } as any, // minimal helpers stub
-      credentials: { apiKey: 'k', apiSecret: 's' },
+      context: makeContext({ httpRequest: vi.fn(), request: vi.fn() }),
       testMode: true,
     });
     expect(res.status).toBe('queued');

@@ -1,6 +1,6 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha-13",
+  "version": "1.0.0-alpha.14",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node-package",
@@ -27,12 +27,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
     "nodes": [
       "dist/nodes/SinchEngage/SinchEngage.node.js",
       "dist/nodes/SinchEngage/SinchEngageTrigger.node.js"
     ],
     "credentials": [
-      "dist/credentials/MessageMediaApi.credential.js"
+      "dist/credentials/MessageMediaApi.credentials.js"
     ]
   },
   "files": [
@@ -48,15 +50,16 @@
     "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run",
     "dev:test": "vitest",
+    "prepublishOnly": "npm run build && npm run lint",
     "prepare": "npm run build"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.6",
     "n8n-core": "^2.6.2",
     "n8n-workflow": "^2.6.1",
     "nock": "^13.4.0",

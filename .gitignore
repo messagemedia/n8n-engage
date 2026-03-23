@@ -41,4 +41,5 @@ temp/
 *.credentials.json
 
 # Package manager artifacts
-.pnpm-debug.log
+.pnpm-debug.log.claude/
+.claude/

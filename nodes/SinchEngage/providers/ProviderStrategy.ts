@@ -9,8 +9,7 @@ export interface ProviderStrategy {
     encoding?: 'auto' | 'GSM7' | 'UCS-2';
     testMode?: boolean;
     providerRegion?: string;
-    helpers: IExecuteFunctions['helpers'];
-    credentials: Record<string, string>;
+    context: IExecuteFunctions;
   }): Promise<{
     status: 'queued' | 'sent' | 'failed';
     providerMessageId?: string;

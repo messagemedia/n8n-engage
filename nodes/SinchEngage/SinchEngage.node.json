@@ -1,0 +1,22 @@
+{
+	"node": "n8n-nodes-sinch-engage.sinchEngage",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Communication"],
+	"subcategories": {
+		"Communication": ["SMS"]
+	},
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://developers.messagemedia.com"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/messagemedia/n8n-engage#readme"
+			}
+		]
+	},
+	"alias": ["sms", "text message", "messagemedia", "sinch", "sinch engage"]
+}

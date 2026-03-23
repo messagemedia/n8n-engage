@@ -44,7 +44,7 @@ check_and_bump_alpha() {
 
     # Find the latest alpha version by scanning all published version strings
     local latest_alpha
-    latest_alpha=$(echo "$npm_info" | grep -o '"[0-9]*\.[0-9]*\.[0-9]*-alpha-[0-9]*"' | tr -d '"' | sort -t- -k3 -n | tail -1)
+    latest_alpha=$(echo "$npm_info" | grep -oE '"[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+"' | tr -d '"' | sort -t. -k4 -n | tail -1)
 
     if [[ -z "$latest_alpha" ]]; then
         echo "   No alpha versions found on npm. Using local version $local_version."
@@ -79,10 +79,10 @@ check_and_bump_alpha() {
     if [[ "$local_version" == "$latest_alpha" && $age_seconds -gt 86400 ]]; then
         # Same version as npm and older than 24h — bump the alpha number
         local base alpha_num new_alpha_num new_version
-        base=$(echo "$local_version" | sed 's/-alpha-[0-9]*//')
-        alpha_num=$(echo "$local_version" | grep -o 'alpha-[0-9]*' | grep -o '[0-9]*')
+        base=$(echo "$local_version" | sed 's/-alpha\.[0-9]*//')
+        alpha_num=$(echo "$local_version" | grep -oE 'alpha\.[0-9]+' | grep -oE '[0-9]+')
         new_alpha_num=$((alpha_num + 1))
-        new_version="${base}-alpha-${new_alpha_num}"
+        new_version="${base}-alpha.${new_alpha_num}"
 
         echo "   Auto-bumping version to $new_version (last publish was >24h ago)"
         sed -i.bak "s/\"version\": \"$local_version\"/\"version\": \"$new_version\"/" package.json && rm -f package.json.bak
@@ -176,6 +176,17 @@ publish_package() {
         echo ""
         echo "🔗 Installation (for testing):"
         echo "   npm install $PACKAGE_NAME@alpha"
+        echo ""
+        # Prompt to tag as latest
+        echo ""
+        read -p "Tag this version as 'latest'? (y/N): " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "🏷️  Tagging $PACKAGE_NAME@$PACKAGE_VERSION as latest..."
+            npm dist-tag add "$PACKAGE_NAME@$PACKAGE_VERSION" latest
+            echo "✅ Tagged as latest!"
+        fi
+
         echo ""
         echo "🎯 Next Steps:"
         echo "   1. Test the package in a development n8n instance"

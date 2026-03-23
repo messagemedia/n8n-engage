@@ -142,7 +142,7 @@ describe('SinchEngageTrigger', () => {
 
         await expect(
           triggerNode.webhookMethods.default.create.call(mockContext)
-        ).rejects.toThrow('Failed to create webhook');
+        ).rejects.toThrow('Unable to register webhook with Sinch Engage');
       });
     });
 

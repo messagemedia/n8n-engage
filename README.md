@@ -2,6 +2,15 @@
 
 Community node for n8n to send SMS via Sinch Engage with a clean, focused interface.
 
+## Installation
+
+1. In your n8n instance, go to **Settings > Community Nodes**
+2. Click **Install a community node**
+3. Enter: `@sinch-engage/n8n-nodes-sinch-engage`
+4. Click **Install**
+
+**Compatibility**: Requires n8n version 1.0.0 or later.
+
 ## ✨ Features
 - **Sinch Engage SMS integration** - SMS provider with global reach `https://sinch.com/engage/`
 - **Clean, simple UI** - No complex provider selection or credential confusion
@@ -14,7 +23,7 @@ Community node for n8n to send SMS via Sinch Engage with a clean, focused interf
 ### Basic Information
 - **Display Name**: Sinch Engage
 - **Name**: `SinchEngage`
-- **Group**: `transform`
+- **Group**: `output`
 - **Inputs**: `main`
 - **Outputs**: `main`
 
@@ -34,9 +43,6 @@ The node provides a clean, focused interface with logical field organization:
 #### 3. **Additional Fields**
 - **Status Callback URL** - Webhook URL for delivery status updates
 - **Encoding**: auto | GSM7 | UCS-2 (auto-detects by default)
-- **Rate Limit (ms)** - Delay between messages
-- **Fail if Undeliverable** (default: true) - Throw error if validation fails
-- **Return Raw** (default: false) - Include provider response in output
 
 ## 🔐 Credentials
 
@@ -86,7 +92,7 @@ The node provides a clean, focused interface with logical field organization:
           "statusCallbackUrl": "https://your-webhook.com/sms-status"
         }
       },
-      "type": "n8n-nodes-sms-sender.SinchEngage",
+      "type": "@sinch-engage/n8n-nodes-sinch-engage.sinchEngage",
       "typeVersion": 1,
       "name": "Sinch Engage SMS Sender"
     }
@@ -102,8 +108,8 @@ The node provides a clean, focused interface with logical field organization:
 - **Missing "From"**: Node automatically uses default account number
 
 ### Phone Number Format
-- **Required**: E.164 international format (e.g., `+61437536808`)
-- **Not supported**: Local formats like `0437536808` (must include country code)
+- **Recommended**: E.164 international format (e.g., `+61437536808`)
+- **Local formats**: Supported when the Country dropdown is selected (e.g., `0437536808` with Australia selected)
 - **Validation**: Node automatically normalizes and validates numbers
 
 ## 🔧 Technical Details
@@ -130,19 +136,19 @@ This package follows semantic versioning with pre-release tags:
 - **Alpha** (`1.x.x-alpha.x`) - Internal testing and development builds
   - Experimental features and breaking changes
   - For team testing in isolated n8n instances
-  - Install: `npm install n8n-nodes-sms-sender@alpha`
-  
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage@alpha`
+
 - **Beta** (`1.x.x-beta.x`) - Public preview releases
   - Feature-complete but undergoing final testing
   - Safe for non-production workflows
-  - Install: `npm install n8n-nodes-sms-sender@beta`
-  
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage@beta`
+
 - **General Availability** (`1.x.x`) - Production-ready releases
   - Stable, fully tested, and verified by n8n
   - Recommended for production use
-  - Install: `npm install n8n-nodes-sms-sender` (latest stable)
+  - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage` (latest stable)
 
-**Current Version**: `1.1.0-alpha.0` - Alpha testing phase
+**Current Version**: `1.0.0-alpha.14` - Alpha testing phase
 
 ### Version Strategy
 - **Major** (x.0.0): Breaking changes, major feature overhauls

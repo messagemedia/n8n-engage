@@ -3,7 +3,6 @@ import type {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
-  NodeConnectionType,
   IDataObject,
   ILoadOptionsFunctions,
 } from 'n8n-workflow';
@@ -13,6 +12,20 @@ import type { SmsOutputItem, EncodingOption } from './types';
 import { MessageMediaProvider } from './providers/MessageMediaProvider';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
 import { getNames } from '../../utils/countryCodes';
+
+interface AccountNumberEntry {
+  sender_address?: string;
+  sender_address_type?: string;
+  label?: string;
+  display_status?: string;
+  destination_countries?: string[];
+  number?: { capabilities?: string[]; type?: string };
+}
+
+interface AccountNumbersResponse {
+  data?: AccountNumberEntry[];
+  pagination?: { next_token?: string };
+}
 
 // Generate country list for dropdown (sorted alphabetically by name)
 function getCountryOptions() {
@@ -29,16 +42,16 @@ export class SinchEngage implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Engage',
     name: 'sinchEngage',
-    icon: 'file:sinch-logo.png',
-    group: ['transform'],
+    icon: 'file:sinch-logo.svg',
+    group: ['output'],
     version: 1,
-    subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
+    subtitle: '={{$parameter["resource"].toUpperCase() + ": " + $parameter["operation"].charAt(0).toUpperCase() + $parameter["operation"].slice(1)}}',
     description: 'Send SMS and manage communications via Sinch Engage',
     defaults: {
       name: 'Sinch Engage',
     },
-    inputs: ['main' as NodeConnectionType],
-    outputs: ['main' as NodeConnectionType],
+    inputs: ['main'],
+    outputs: ['main'],
     credentials: [
       { name: 'messageMediaApi', required: true },
     ],
@@ -113,6 +126,7 @@ export class SinchEngage implements INodeType {
         type: 'string',
         required: true,
         default: '',
+        placeholder: 'e.g. +61437536808',
         description: 'Destination phone number (E.164 preferred, e.g., +61437536808, or local format like 0437536808 requires Country field)',
         displayOptions: {
           show: {
@@ -127,9 +141,8 @@ export class SinchEngage implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Country for parsing local phone numbers (e.g., "0437 536 808" → "+61437536808" if Australia selected). Required for local/national format numbers without + prefix.',
-        placeholder: 'Select a country...',
+        placeholder: 'e.g. Australia',
         displayOptions: {
           show: {
             resource: ['sms'],
@@ -138,15 +151,14 @@ export class SinchEngage implements INodeType {
         },
       },
       {
-        displayName: 'From',
+        displayName: 'From Name or ID',
         name: 'from',
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getAccountNumbers',
         },
         default: '',
-        required: false,
-        description: 'Sender phone number. Leave empty to use account default number.',
+        description: 'Sender phone number. Leave empty to use account default number. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
         displayOptions: {
           show: {
             resource: ['sms'],
@@ -161,7 +173,8 @@ export class SinchEngage implements INodeType {
         typeOptions: { rows: 3 },
         required: true,
         default: '',
-        description: 'Message to send, up to 1600 characters GSM7 encoding (standard characters) allows ~160 chars per SMS segment. Unicode/emoji uses UCS-2 encoding (~70 chars per segment). Longer messages are automatically split into multiple segments.',
+        placeholder: 'e.g. Hello from n8n!',
+        description: 'Message to send, up to 1600 characters. GSM7 encoding (standard characters) allows ~160 chars per SMS segment. Unicode/emoji uses UCS-2 encoding (~70 chars per segment). Longer messages are automatically split into multiple segments.',
         displayOptions: {
           show: {
             resource: ['sms'],
@@ -194,9 +207,8 @@ export class SinchEngage implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Country for parsing local phone numbers without international prefix',
-        placeholder: 'Select a country...',
+        placeholder: 'e.g. Australia',
         displayOptions: {
           show: {
             resource: ['blacklist'],
@@ -231,7 +243,7 @@ export class SinchEngage implements INodeType {
             name: 'encoding',
             type: 'options',
             options: [
-              { name: 'Auto-detect', value: 'auto' },
+              { name: 'Auto-Detect', value: 'auto' },
               { name: 'GSM7', value: 'GSM7' },
               { name: 'UCS-2', value: 'UCS-2' },
             ],
@@ -259,7 +271,7 @@ export class SinchEngage implements INodeType {
           }
 
           // Fetch all pages of account numbers from MessageMedia API
-          const allNumbers: any[] = [];
+          const allNumbers: AccountNumberEntry[] = [];
           let nextToken: string | undefined;
           let pageCount = 0;
           const maxPages = 10; // Safety limit to prevent infinite loops
@@ -270,7 +282,7 @@ export class SinchEngage implements INodeType {
               params.page_token = nextToken;
             }
 
-            const response = await makeMessageMediaRequest(this, {
+            const response = await makeMessageMediaRequest<AccountNumbersResponse>(this, {
               method: 'GET',
               url: 'https://api.messagemedia.com/v1/messaging/numbers/sender_address/addresses',
               qs: params,
@@ -301,7 +313,7 @@ export class SinchEngage implements INodeType {
             if (!numberObj.sender_address) continue;
 
             // Extract data from API response
-            const phoneNumber = numberObj.sender_address;
+            const phoneNumber = numberObj.sender_address as string;
             const label = numberObj.label?.trim() || '';
             const capabilities = numberObj.number?.capabilities || [];
             const numberType = numberObj.number?.type || numberObj.sender_address_type || 'UNKNOWN';
@@ -370,62 +382,60 @@ export class SinchEngage implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('messageMediaApi')) as unknown as Record<string, string>;
+    const strategy = new MessageMediaProvider();
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-      const resource = this.getNodeParameter('resource', itemIndex) as string;
-      const operation = this.getNodeParameter('operation', itemIndex) as string;
+      try {
+        const resource = this.getNodeParameter('resource', itemIndex) as string;
+        const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-      if (resource === 'sms') {
-        if (operation === 'send') {
-          // SEND SMS OPERATION
-          const toRaw = this.getNodeParameter('to', itemIndex) as string;
-          const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
-          const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
-          
-          const message = this.getNodeParameter('message', itemIndex) as string;
+        if (resource === 'sms') {
+          if (operation === 'send') {
+            // SEND SMS OPERATION
+            const toRaw = this.getNodeParameter('to', itemIndex) as string;
+            const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
+            const fromRaw = this.getNodeParameter('from', itemIndex, '') as string;
 
-          const additional = this.getNodeParameter('additionalFields', itemIndex, {}) as {
-            statusCallbackUrl?: string;
-            encoding?: EncodingOption;
-          };
+            const message = this.getNodeParameter('message', itemIndex) as string;
 
-          const encoding = detectEncoding(message, additional.encoding || 'auto');
+            const additional = this.getNodeParameter('additionalFields', itemIndex, {}) as {
+              statusCallbackUrl?: string;
+              encoding?: EncodingOption;
+            };
 
-          if (message.length === 0 || message.length > 1600) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'Message must be between 1 and 1600 characters',
-            });
-          }
+            const encoding = detectEncoding(message, additional.encoding || 'auto');
 
-          const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
-          
-          // Handle from field - if empty, skip normalization (will use default account number)
-          let fromResult: { ok: boolean; value: string; error?: string };
-          if (!fromRaw || fromRaw.trim() === '') {
-            fromResult = { ok: true, value: '' };
-          } else {
-            const normalized = normalizePhoneNumberToE164(fromRaw, defaultCountry);
-            if (normalized.ok) {
-              fromResult = { ok: true, value: normalized.value };
-            } else {
-              fromResult = { ok: false, value: fromRaw, error: normalized.error };
+            if (message.length === 0 || message.length > 1600) {
+              throw new NodeApiError(this.getNode(), {
+                message: 'Message must be between 1 and 1600 characters',
+              }, { itemIndex });
             }
-          }
 
-          // Always throw error if phone number validation fails
-          if (!toResult.ok || !fromResult.ok) {
-            let errMsg: string | undefined;
-            if (!toResult.ok) errMsg = toResult.error;
-            if (!fromResult.ok) errMsg = fromResult.error;
-            throw new NodeApiError(this.getNode(), { message: `Invalid phone number: ${errMsg}` });
-          }
+            const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
 
-          const queuedAt = new Date().toISOString();
+            // Handle from field - if empty, skip normalization (will use default account number)
+            let fromResult: { ok: boolean; value: string; error?: string };
+            if (!fromRaw || fromRaw.trim() === '') {
+              fromResult = { ok: true, value: '' };
+            } else {
+              const normalized = normalizePhoneNumberToE164(fromRaw, defaultCountry);
+              if (normalized.ok) {
+                fromResult = { ok: true, value: normalized.value };
+              } else {
+                fromResult = { ok: false, value: fromRaw, error: normalized.error };
+              }
+            }
 
-          const strategy = new MessageMediaProvider();
+            // Always throw error if phone number validation fails
+            if (!toResult.ok || !fromResult.ok) {
+              let errMsg: string | undefined;
+              if (!toResult.ok) errMsg = toResult.error;
+              if (!fromResult.ok) errMsg = fromResult.error;
+              throw new NodeApiError(this.getNode(), { message: `Invalid phone number: ${errMsg}` }, { itemIndex });
+            }
 
-          try {
+            const queuedAt = new Date().toISOString();
+
             const providerResult = await strategy.send({
               to: toResult.ok ? toResult.value : toRaw,
               from: fromResult.ok ? fromResult.value : fromRaw,
@@ -434,8 +444,7 @@ export class SinchEngage implements INodeType {
               encoding: additional.encoding || 'auto',
               testMode: false,
               providerRegion: undefined, // MessageMedia does not have a region concept
-              helpers: this.helpers,
-              credentials,
+              context: this,
             });
 
             const output: SmsOutputItem = {
@@ -447,44 +456,38 @@ export class SinchEngage implements INodeType {
               providerMessageId: providerResult.providerMessageId ?? null,
               error: providerResult.error ?? null,
               meta: {
-                cost: { currency: 'USD', amount: 0 },
                 encoding,
                 queuedAt,
               },
             };
             returnData.push({ json: output as unknown as IDataObject, pairedItem: { item: itemIndex } });
-          } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
           }
-        }
-      } else if (resource === 'blacklist') {
-        if (operation === 'add') {
-          // ADD TO BLACKLIST OPERATION
-          const numbersRaw = this.getNodeParameter('blacklistNumbers', itemIndex) as string;
-          const blacklistCountry = this.getNodeParameter('blacklistCountry', itemIndex, '') as string || undefined;
+        } else if (resource === 'blacklist') {
+          if (operation === 'add') {
+            // ADD TO BLACKLIST OPERATION
+            const numbersRaw = this.getNodeParameter('blacklistNumbers', itemIndex) as string;
+            const blacklistCountry = this.getNodeParameter('blacklistCountry', itemIndex, '') as string || undefined;
 
-          // Parse and normalize phone numbers (one per line)
-          const lines = numbersRaw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-          
-          if (lines.length === 0) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'At least one phone number is required',
-            });
-          }
+            // Parse and normalize phone numbers (one per line)
+            const lines = numbersRaw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
 
-          const normalizedNumbers: string[] = [];
-          for (const line of lines) {
-            const result = normalizePhoneNumberToE164(line, blacklistCountry);
-            if (!result.ok) {
+            if (lines.length === 0) {
               throw new NodeApiError(this.getNode(), {
-                message: `Invalid phone number "${line}": ${result.error}`,
-              });
+                message: 'At least one phone number is required',
+              }, { itemIndex });
             }
-            normalizedNumbers.push(result.value);
-          }
 
-          try {
+            const normalizedNumbers: string[] = [];
+            for (const line of lines) {
+              const result = normalizePhoneNumberToE164(line, blacklistCountry);
+              if (!result.ok) {
+                throw new NodeApiError(this.getNode(), {
+                  message: `Invalid phone number "${line}": ${result.error}`,
+                }, { itemIndex });
+              }
+              normalizedNumbers.push(result.value);
+            }
+
             // Call MessageMedia blacklist API
             const response = await makeMessageMediaRequest(this, {
               method: 'POST',
@@ -503,11 +506,21 @@ export class SinchEngage implements INodeType {
               } as unknown as IDataObject,
               pairedItem: { item: itemIndex },
             });
-          } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: `Failed to add numbers to blacklist: ${e.message}` });
           }
         }
+      } catch (error) {
+        if (this.continueOnFail()) {
+          const e = error as Error;
+          returnData.push({
+            json: { error: e.message },
+            pairedItem: { item: itemIndex },
+          });
+          continue;
+        }
+        if (error instanceof NodeApiError) {
+          throw error;
+        }
+        throw new NodeApiError(this.getNode(), { message: (error as Error).message }, { itemIndex });
       }
     }
 

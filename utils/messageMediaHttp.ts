@@ -18,13 +18,13 @@ import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions } from 'n
  * });
  * ```
  */
-export async function makeMessageMediaRequest<T = any>(
+export async function makeMessageMediaRequest<T = unknown>(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   options: {
     method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
     url: string;
-    body?: any;
-    qs?: Record<string, any>;
+    body?: Record<string, unknown>;
+    qs?: Record<string, string>;
   },
 ): Promise<T> {
   // Retrieve MessageMedia credentials
