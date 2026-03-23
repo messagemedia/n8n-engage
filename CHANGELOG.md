@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.0-alpha-14] - 2026-03-23
+
+### Added
+
+- Codex metadata files (`*.node.json`) for n8n catalog integration
+- GitHub Actions publish workflow with provenance support
+- `prepublishOnly` script to enforce build + lint before publish
+- `continueOnFail()` error handling in execute loop
+
+### Changed
+
+- Re-thrown errors in execute() now wrapped in `NodeApiError` for proper n8n UI rendering
+- Set `no-console` ESLint rule to `error` to prevent accidental logging
+- Updated README to reference correct package name `@sinch-engage/n8n-nodes-sinch-engage`
+
+### Fixed
+
+- Removed deprecated `request` fallback and debug logging
+- Masked API key credential field as password
+- Cleaned up package.json for n8n verification (removed unused fields, added `n8n.strict: true`)
+- Remediated high Snyk transitive vulnerabilities
+- Updated Node.js engine requirement to support v24
+
+
 ## [1.0.0-alpha.8] - 2025-12-01
 
 **⚠️ ALPHA RELEASE**
