@@ -40,7 +40,7 @@ export class SinchEngageTrigger implements INodeType {
     subtitle: '={{$parameter["eventType"]}}',
     description: 'Receive SMS messages via Sinch Engage webhook',
     defaults: {
-      name: 'Sinch Engage',
+      name: 'Sinch Engage Trigger',
     },
     inputs: [],
     outputs: ['main'],
