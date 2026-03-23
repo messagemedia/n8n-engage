@@ -367,6 +367,7 @@ export class SinchEngage implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
     const credentials = (await this.getCredentials('messageMediaApi')) as unknown as Record<string, string>;
+    const strategy = new MessageMediaProvider();
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       try {
@@ -419,8 +420,6 @@ export class SinchEngage implements INodeType {
             }
 
             const queuedAt = new Date().toISOString();
-
-            const strategy = new MessageMediaProvider();
 
             const providerResult = await strategy.send({
               to: toResult.ok ? toResult.value : toRaw,
