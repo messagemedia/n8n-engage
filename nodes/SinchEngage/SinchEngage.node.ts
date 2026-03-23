@@ -172,7 +172,7 @@ export class SinchEngage implements INodeType {
         typeOptions: { rows: 3 },
         required: true,
         default: '',
-        description: 'Message to send, up to 1600 characters GSM7 encoding (standard characters) allows ~160 chars per SMS segment. Unicode/emoji uses UCS-2 encoding (~70 chars per segment). Longer messages are automatically split into multiple segments.',
+        description: 'Message to send, up to 1600 characters. GSM7 encoding (standard characters) allows ~160 chars per SMS segment. Unicode/emoji uses UCS-2 encoding (~70 chars per segment). Longer messages are automatically split into multiple segments.',
         displayOptions: {
           show: {
             resource: ['sms'],
