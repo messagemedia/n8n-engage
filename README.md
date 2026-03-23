@@ -14,7 +14,7 @@ Community node for n8n to send SMS via Sinch Engage with a clean, focused interf
 ### Basic Information
 - **Display Name**: Sinch Engage
 - **Name**: `SinchEngage`
-- **Group**: `transform`
+- **Group**: `output`
 - **Inputs**: `main`
 - **Outputs**: `main`
 

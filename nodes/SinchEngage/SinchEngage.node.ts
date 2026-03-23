@@ -29,7 +29,7 @@ export class SinchEngage implements INodeType {
     displayName: 'Sinch Engage',
     name: 'sinchEngage',
     icon: 'file:sinch-logo.svg',
-    group: ['transform'],
+    group: ['output'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Send SMS and manage communications via Sinch Engage',
