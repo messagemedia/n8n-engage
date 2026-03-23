@@ -13,6 +13,20 @@ import { MessageMediaProvider } from './providers/MessageMediaProvider';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
 import { getNames } from '../../utils/countryCodes';
 
+interface AccountNumberEntry {
+  sender_address?: string;
+  sender_address_type?: string;
+  label?: string;
+  display_status?: string;
+  destination_countries?: string[];
+  number?: { capabilities?: string[]; type?: string };
+}
+
+interface AccountNumbersResponse {
+  data?: AccountNumberEntry[];
+  pagination?: { next_token?: string };
+}
+
 // Generate country list for dropdown (sorted alphabetically by name)
 function getCountryOptions() {
   const countryList = getNames();
@@ -255,7 +269,7 @@ export class SinchEngage implements INodeType {
           }
 
           // Fetch all pages of account numbers from MessageMedia API
-          const allNumbers: any[] = [];
+          const allNumbers: AccountNumberEntry[] = [];
           let nextToken: string | undefined;
           let pageCount = 0;
           const maxPages = 10; // Safety limit to prevent infinite loops
@@ -266,7 +280,7 @@ export class SinchEngage implements INodeType {
               params.page_token = nextToken;
             }
 
-            const response = await makeMessageMediaRequest(this, {
+            const response = await makeMessageMediaRequest<AccountNumbersResponse>(this, {
               method: 'GET',
               url: 'https://api.messagemedia.com/v1/messaging/numbers/sender_address/addresses',
               qs: params,
@@ -297,7 +311,7 @@ export class SinchEngage implements INodeType {
             if (!numberObj.sender_address) continue;
 
             // Extract data from API response
-            const phoneNumber = numberObj.sender_address;
+            const phoneNumber = numberObj.sender_address as string;
             const label = numberObj.label?.trim() || '';
             const capabilities = numberObj.number?.capabilities || [];
             const numberType = numberObj.number?.type || numberObj.sender_address_type || 'UNKNOWN';
