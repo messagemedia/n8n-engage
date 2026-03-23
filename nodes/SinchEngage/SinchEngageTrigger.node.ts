@@ -132,10 +132,11 @@ export class SinchEngageTrigger implements INodeType {
           webhookData.webhookId = response.id;
           webhookData.webhookUrl = webhookUrl;
           return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const err = error as { message?: string };
           throw new NodeApiError(this.getNode(), {
-            message: 'Failed to create webhook',
-            description: error.message,
+            message: 'Unable to register webhook with Sinch Engage',
+            description: 'Check your API credentials and ensure webhooks are enabled on your Sinch Engage account. Error: ' + (err.message || 'Unknown error'),
           });
         }
       },
