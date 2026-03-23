@@ -108,8 +108,8 @@ The node provides a clean, focused interface with logical field organization:
 - **Missing "From"**: Node automatically uses default account number
 
 ### Phone Number Format
-- **Required**: E.164 international format (e.g., `+61437536808`)
-- **Not supported**: Local formats like `0437536808` (must include country code)
+- **Recommended**: E.164 international format (e.g., `+61437536808`)
+- **Local formats**: Supported when the Country dropdown is selected (e.g., `0437536808` with Australia selected)
 - **Validation**: Node automatically normalizes and validates numbers
 
 ## 🔧 Technical Details
