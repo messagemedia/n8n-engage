@@ -148,7 +148,7 @@ This package follows semantic versioning with pre-release tags:
   - Recommended for production use
   - Install: `npm install @sinch-engage/n8n-nodes-sinch-engage` (latest stable)
 
-**Current Version**: `1.0.0-alpha-14` - Alpha testing phase
+**Current Version**: `1.0.0-alpha.14` - Alpha testing phase
 
 ### Version Strategy
 - **Major** (x.0.0): Breaking changes, major feature overhauls
