@@ -1,5 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('n8n-workflow', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('n8n-workflow');
+  class NodeApiError extends Error {
+    constructor(_node: unknown, options: { message?: string; description?: string }) {
+      super(options.message || 'Unknown error');
+    }
+  }
+  return {
+    ...actual,
+    NodeApiError,
+    NodeConnectionTypes: { Main: 'main' },
+  };
+});
+
 import { SinchEngageTrigger } from '../nodes/SinchEngage/SinchEngageTrigger.node';
+import { NodeConnectionTypes } from 'n8n-workflow';
 import type { IHookFunctions, IWebhookFunctions } from 'n8n-workflow';
 
 describe('SinchEngageTrigger', () => {
@@ -15,7 +31,7 @@ describe('SinchEngageTrigger', () => {
       expect(triggerNode.description.name).toBe('sinchEngageTrigger');
       expect(triggerNode.description.group).toEqual(['trigger']);
       expect(triggerNode.description.inputs).toEqual([]);
-      expect(triggerNode.description.outputs).toEqual(['main']);
+      expect(triggerNode.description.outputs).toEqual([NodeConnectionTypes.Main]);
     });
 
     it('should require messageMediaApi credentials', () => {

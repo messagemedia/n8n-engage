@@ -6,7 +6,7 @@ import type {
   IDataObject,
   ILoadOptionsFunctions,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes } from 'n8n-workflow';
 import { normalizePhoneNumberToE164, detectEncoding } from '../../utils/phone';
 import type { SmsOutputItem, EncodingOption } from './types';
 import { MessageMediaProvider } from './providers/MessageMediaProvider';
@@ -50,8 +50,10 @@ export class SinchEngage implements INodeType {
     defaults: {
       name: 'Sinch Engage',
     },
-    inputs: ['main'],
-    outputs: ['main'],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
+    inputs: [NodeConnectionTypes.Main],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+    outputs: [NodeConnectionTypes.Main],
     credentials: [
       { name: 'messageMediaApi', required: true },
     ],

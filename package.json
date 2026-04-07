@@ -1,6 +1,6 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch-engage",
-  "version": "1.0.0-alpha.14",
+  "version": "1.0.0-alpha.15",
   "description": "n8n community node to send SMS via Sinch Engage",
   "keywords": [
     "n8n-community-node-package",
@@ -39,13 +39,15 @@
   },
   "files": [
     "dist/**/*",
+    "!dist/credentials/MessageMediaApi.credential.*",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
   ],
   "scripts": {
+    "prebuild": "rm -rf dist",
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f nodes/SinchEngage/*.png nodes/SinchEngage/*.svg dist/nodes/SinchEngage/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/SinchEngage && cp -f nodes/SinchEngage/*.png nodes/SinchEngage/*.svg nodes/SinchEngage/*.node.json dist/nodes/SinchEngage/ 2>/dev/null || true",
     "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
     "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run",
