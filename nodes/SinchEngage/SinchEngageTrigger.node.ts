@@ -5,7 +5,7 @@ import type {
   INodeTypeDescription,
   IWebhookResponseData,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes } from 'n8n-workflow';
 import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
 
 interface WebhookData {
@@ -43,7 +43,8 @@ export class SinchEngageTrigger implements INodeType {
       name: 'Sinch Engage Trigger',
     },
     inputs: [],
-    outputs: ['main'],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+    outputs: [NodeConnectionTypes.Main],
     credentials: [
       {
         name: 'messageMediaApi',

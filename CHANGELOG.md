@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.0-alpha.15] - 2026-04-07
+
+### Fixed
+
+- Use `NodeConnectionTypes.Main` constant for inputs/outputs instead of string literals (n8n reviewer requirement)
+- Add `prebuild` script to clean `dist/` before each build, preventing stale/duplicate artifacts
+- Copy codex `.node.json` metadata files to `dist/` during build (were missing from published package)
+- Add exclusion pattern for old `MessageMediaApi.credential.*` files in `files` field to prevent duplicate credentials in npm tarball
+
+### Changed
+
+- Upgrade GitHub Actions publish workflow to match n8n-build: auto-detect version bumps on push to main, auto-create GitHub Release and git tag with provenance
+- Promote `@typescript-eslint/no-explicit-any` from warn to error
+
 ## [1.0.0-alpha.14] - 2026-03-23
 
 ### Added

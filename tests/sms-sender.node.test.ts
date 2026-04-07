@@ -4,13 +4,14 @@ import nock from 'nock';
 // Minimal stub of n8n-workflow to satisfy dynamic imports in execute tests
 vi.mock('n8n-workflow', async () => {
   class NodeApiError extends Error {
-    constructor(node: any, options: { message: string }) {
+    constructor(_node: unknown, options: { message: string }) {
       super(options.message);
     }
   }
   return {
     NodeApiError,
-  } as any;
+    NodeConnectionTypes: { Main: 'main' },
+  };
 });
 
 import { detectEncoding, normalizePhoneNumberToE164 } from '../utils/phone';
