@@ -18,7 +18,7 @@ import { detectEncoding, normalizePhoneNumberToE164 } from '../utils/phone';
 import { MessageMediaProvider } from '../nodes/SinchEngage/providers/MessageMediaProvider';
 
 const helpers: any = {
-  httpRequest: async (opts: any) => {
+  httpRequestWithAuthentication: async (_cred: string, opts: any) => {
     const fetch = await import('node-fetch');
     const res = await (fetch.default as any)(opts.url, {
       method: opts.method || 'GET',
@@ -98,7 +98,7 @@ describe('test mode synthetic response', () => {
       to: '+1',
       from: '+2',
       message: 'Hi',
-      context: makeContext({ httpRequest: vi.fn(), request: vi.fn() }),
+      context: makeContext({ httpRequestWithAuthentication: vi.fn(), request: vi.fn() }),
       testMode: true,
     });
     expect(res.status).toBe('queued');

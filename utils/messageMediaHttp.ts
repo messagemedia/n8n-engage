@@ -27,21 +27,11 @@ export async function makeMessageMediaRequest<T = unknown>(
     qs?: Record<string, string>;
   },
 ): Promise<T> {
-  // Retrieve MessageMedia credentials
-  const credentials = (await context.getCredentials('messageMediaApi')) as {
-    apiKey: string;
-    apiSecret: string;
-  };
-
-  const response = await context.helpers.httpRequest({
+  const response = await context.helpers.httpRequestWithAuthentication.call(context, 'messageMediaApi', {
     method: options.method,
     url: options.url,
     body: options.body,
     qs: options.qs,
-    auth: {
-      username: credentials.apiKey,
-      password: credentials.apiSecret,
-    },
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
