@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.0.0-alpha.16] - 2026-04-08
+
+### Fixed
+
+- Use `httpRequestWithAuthentication` instead of manual credential retrieval for secure, consistent auth handling (n8n reviewer requirement)
+- Remove undocumented `subcategories` field from codex `.node.json` files (only `node`, `nodeVersion`, `codexVersion`, `categories`, `resources`, `alias` are supported)
+- Sort resource dropdown options alphabetically — "Blacklist" now appears before "SMS" (n8n UX guideline)
+
 ## [1.0.0-alpha.15] - 2026-04-07
 
 ### Fixed

@@ -66,14 +66,14 @@ export class SinchEngage implements INodeType {
         noDataExpression: true,
         options: [
           {
-            name: 'SMS',
-            value: 'sms',
-            description: 'Send and manage SMS messages',
-          },
-          {
             name: 'Blacklist',
             value: 'blacklist',
             description: 'Manage opt-out blacklist for phone numbers',
+          },
+          {
+            name: 'SMS',
+            value: 'sms',
+            description: 'Send and manage SMS messages',
           },
         ],
         default: 'sms',
