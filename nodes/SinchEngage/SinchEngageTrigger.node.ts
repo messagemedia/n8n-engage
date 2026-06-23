@@ -11,6 +11,8 @@ import { makeMessageMediaRequest } from '../../utils/messageMediaHttp';
 interface WebhookData {
   webhookId?: string;
   webhookUrl?: string;
+  webhookType?: 'messages' | 'connectors';
+  eventType?: TriggerEventType;
 }
 
 interface MessageMediaWebhookResponse {
@@ -28,6 +30,48 @@ interface IncomingSmsPayload {
   metadata?: Record<string, unknown>;
 }
 
+interface ContactListPayload {
+  eventType?: string;
+  contactId?: string;
+  listId?: string;
+  listName?: string;
+  receivedTimestamp?: string;
+}
+
+type TriggerEventType = 'incomingSms' | 'contactAddedToList' | 'contactRemovedFromList';
+
+function getWebhookConfig(eventType: TriggerEventType): {
+  baseUrl: string;
+  events: string[];
+  webhookType: 'messages' | 'connectors';
+  template?: string;
+} {
+  if (eventType === 'contactAddedToList') {
+    return {
+      baseUrl: 'https://api.messagemedia.com/v1/connectors/webhooks',
+      events: ['CONTACT_LIST_ADDED'],
+      webhookType: 'connectors',
+      template: '{"eventType":"$eventType","contactId":"$contactId","listId":"$listId","listName":"$esc.json($listName)","receivedTimestamp":"$receivedTimestamp"}',
+    };
+  }
+
+  if (eventType === 'contactRemovedFromList') {
+    return {
+      baseUrl: 'https://api.messagemedia.com/v1/connectors/webhooks',
+      events: ['CONTACT_LIST_REMOVED'],
+      webhookType: 'connectors',
+      template: '{"eventType":"$eventType","contactId":"$contactId","listId":"$listId","listName":"$esc.json($listName)","receivedTimestamp":"$receivedTimestamp"}',
+    };
+  }
+
+  return {
+    baseUrl: 'https://api.messagemedia.com/v1/webhooks/messages',
+    events: ['RECEIVED_SMS', 'RECEIVED_MMS'],
+    webhookType: 'messages',
+    template: '{"id": "$!moId","date_received": "$receivedTimestamp","destination_number": "$!destinationAddress","source_number": "$!sourceAddress","message_content": "$esc.json($replyContent)","metadata":{#foreach($key in $metadata.keySet())"$key" : "$esc.json($metadata.get($key))"#if( $velocityHasNext ), #end#end}}',
+  };
+}
+
 // NOTE: Removed native https helper. All outbound calls must use this.helpers.httpRequest
 
 export class SinchEngageTrigger implements INodeType {
@@ -38,7 +82,7 @@ export class SinchEngageTrigger implements INodeType {
     group: ['trigger'],
     version: 1,
     subtitle: '={{$parameter["eventType"]}}',
-    description: 'Receive SMS messages via Sinch Engage webhook',
+    description: 'Receive Sinch Engage events via webhook',
     defaults: {
       name: 'Sinch Engage Trigger',
     },
@@ -70,6 +114,16 @@ export class SinchEngageTrigger implements INodeType {
             value: 'incomingSms',
             description: 'Triggers when an SMS is received',
           },
+          {
+            name: 'Contact Added To List',
+            value: 'contactAddedToList',
+            description: 'Triggers when a contact is added to a list',
+          },
+          {
+            name: 'Contact Removed From List',
+            value: 'contactRemovedFromList',
+            description: 'Triggers when a contact is removed from a list',
+          },
         ],
         default: 'incomingSms',
         description: 'The type of event that triggers the workflow',
@@ -82,12 +136,41 @@ export class SinchEngageTrigger implements INodeType {
       async checkExists(this: IHookFunctions): Promise<boolean> {
         const webhookData = this.getWorkflowStaticData('node') as WebhookData;
         const webhookId = webhookData.webhookId;
+        const currentEventType = this.getNodeParameter('eventType', 'incomingSms') as TriggerEventType;
 
         if (!webhookId) {
           return false;
         }
 
-        const checkUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
+        // If the event type has changed, we need to recreate the webhook
+        if (webhookData.eventType && webhookData.eventType !== currentEventType) {
+          // Delete the old webhook from MessageMedia before clearing local data
+          const webhookType = webhookData.webhookType || 'messages';
+          const deleteUrl = webhookType === 'connectors'
+            ? `https://api.messagemedia.com/v1/connectors/webhooks/${webhookId}`
+            : `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
+
+          try {
+            await makeMessageMediaRequest(this, {
+              method: 'DELETE',
+              url: deleteUrl,
+            });
+          } catch (error) {
+            // If delete fails (e.g., 404), proceed anyway - the create method will register a new webhook
+          }
+
+          // Clean up stale data - the create method will register a new webhook
+          delete webhookData.webhookId;
+          delete webhookData.webhookUrl;
+          delete webhookData.webhookType;
+          delete webhookData.eventType;
+          return false;
+        }
+
+        const webhookType = webhookData.webhookType || 'messages';
+        const checkUrl = webhookType === 'connectors'
+          ? `https://api.messagemedia.com/v1/connectors/webhooks/${webhookId}`
+          : `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
 
         try {
           // Check if webhook still exists using stored ID
@@ -101,37 +184,38 @@ export class SinchEngageTrigger implements INodeType {
           // Webhook doesn't exist or API error - clean up stale data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
+          delete webhookData.webhookType;
+          delete webhookData.eventType;
           return false;
         }
       },
 
       async create(this: IHookFunctions): Promise<boolean> {
+        const eventType = this.getNodeParameter('eventType', 'incomingSms') as TriggerEventType;
         const webhookUrl = this.getNodeWebhookUrl('default');
         const webhookData = this.getWorkflowStaticData('node') as WebhookData;
-        const requestUrl = 'https://api.messagemedia.com/v1/webhooks/messages';
-
-        // Define template to match expected IncomingSmsPayload structure
-        // Following Zapier's approach to ensure predictable webhook payload
-        const template = '{"id": "$!moId","date_received": "$receivedTimestamp","destination_number": "$!destinationAddress","source_number": "$!sourceAddress","message_content": "$esc.json($replyContent)","metadata":{#foreach($key in $metadata.keySet())"$key" : "$esc.json($metadata.get($key))"#if( $velocityHasNext ), #end#end}}';
+        const config = getWebhookConfig(eventType);
 
         const requestBody = {
           url: webhookUrl,
           method: 'POST',
           encoding: 'JSON',
           headers: { "Source": "n8n" },
-          events: ['RECEIVED_SMS', 'RECEIVED_MMS'],
-          template: template,
+          events: config.events,
+          template: config.template,
         };
 
         try {
           const response = await makeMessageMediaRequest<MessageMediaWebhookResponse>(this, {
             method: 'POST',
-            url: requestUrl,
+            url: config.baseUrl,
             body: requestBody,
           });
 
           webhookData.webhookId = response.id;
           webhookData.webhookUrl = webhookUrl;
+          webhookData.webhookType = config.webhookType;
+          webhookData.eventType = eventType;
           return true;
         } catch (error: unknown) {
           const err = error as { message?: string };
@@ -150,7 +234,10 @@ export class SinchEngageTrigger implements INodeType {
           return true; // Nothing to delete
         }
 
-        const deleteUrl = `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
+        const webhookType = webhookData.webhookType || 'messages';
+        const deleteUrl = webhookType === 'connectors'
+          ? `https://api.messagemedia.com/v1/connectors/webhooks/${webhookId}`
+          : `https://api.messagemedia.com/v1/webhooks/messages/${webhookId}`;
 
         try {
           // Delete webhook from MessageMedia using standardized helper
@@ -162,6 +249,8 @@ export class SinchEngageTrigger implements INodeType {
           // Clean up static data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
+          delete webhookData.webhookType;
+          delete webhookData.eventType;
 
           return true;
         } catch (error: unknown) {
@@ -171,13 +260,17 @@ export class SinchEngageTrigger implements INodeType {
           if (err.statusCode === 404) {
             delete webhookData.webhookId;
             delete webhookData.webhookUrl;
+            delete webhookData.webhookType;
+            delete webhookData.eventType;
             return true;
           }
 
           // For other errors, still clean up local data
           delete webhookData.webhookId;
           delete webhookData.webhookUrl;
-          
+          delete webhookData.webhookType;
+          delete webhookData.eventType;
+
           return false;
         }
       },
@@ -185,7 +278,33 @@ export class SinchEngageTrigger implements INodeType {
   };
 
   async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
-    const bodyData = this.getBodyData() as unknown as IncomingSmsPayload;
+    const bodyData = this.getBodyData() as unknown;
+    const eventType = this.getNodeParameter('eventType', 'incomingSms') as TriggerEventType;
+
+    if (eventType === 'contactAddedToList' || eventType === 'contactRemovedFromList') {
+      const contactPayload = bodyData as ContactListPayload;
+      const fallbackEventType = eventType === 'contactAddedToList' ? 'CONTACT_LIST_ADDED' : 'CONTACT_LIST_REMOVED';
+
+      const returnData = {
+        eventType: contactPayload.eventType || fallbackEventType,
+        contactId: contactPayload.contactId || null,
+        listId: contactPayload.listId || null,
+        listName: contactPayload.listName || null,
+        receivedTimestamp: contactPayload.receivedTimestamp || null,
+      };
+
+      return {
+        workflowData: [
+          [
+            {
+              json: returnData,
+            },
+          ],
+        ],
+      };
+    }
+
+    const smsPayload = bodyData as IncomingSmsPayload;
 
     // MessageMedia sends incoming SMS in this format:
     // {
@@ -199,13 +318,13 @@ export class SinchEngageTrigger implements INodeType {
 
     // Format data for n8n workflow
     const returnData = {
-      messageId: bodyData.id,
-      from: bodyData.source_number,
-      to: bodyData.destination_number,
-      message: bodyData.message_content,
-      receivedAt: bodyData.date_received,
-      metadata: bodyData.metadata || {},
-      raw: bodyData, // Include raw payload for advanced use cases
+      messageId: smsPayload.id,
+      from: smsPayload.source_number,
+      to: smsPayload.destination_number,
+      message: smsPayload.message_content,
+      receivedAt: smsPayload.date_received,
+      metadata: smsPayload.metadata || {},
+      raw: smsPayload, // Include raw payload for advanced use cases
     };
 
     return {
@@ -224,6 +343,38 @@ export class SinchEngageTrigger implements INodeType {
    * This is called when user clicks "Listen for test event" or "Fetch test event"
    */
   async manualTriggerFunction(this: IHookFunctions): Promise<IWebhookResponseData> {
+    const eventType = (typeof this.getNodeParameter === 'function'
+      ? this.getNodeParameter('eventType', 'incomingSms')
+      : 'incomingSms') as TriggerEventType;
+
+    if (eventType === 'contactAddedToList' || eventType === 'contactRemovedFromList') {
+      const sampleEventType = eventType === 'contactAddedToList' ? 'CONTACT_LIST_ADDED' : 'CONTACT_LIST_REMOVED';
+
+      const samplePayload: ContactListPayload = {
+        eventType: sampleEventType,
+        contactId: 'sample-contact-id',
+        listId: 'sample-list-id',
+        listName: 'Sample List',
+        receivedTimestamp: new Date().toISOString(),
+      };
+
+      return {
+        workflowData: [
+          [
+            {
+              json: {
+                eventType: samplePayload.eventType,
+                contactId: samplePayload.contactId,
+                listId: samplePayload.listId,
+                listName: samplePayload.listName,
+                receivedTimestamp: samplePayload.receivedTimestamp,
+              },
+            },
+          ],
+        ],
+      };
+    }
+
     // Sample incoming SMS payload that mimics what MessageMedia would send
     const samplePayload: IncomingSmsPayload = {
       id: 'sample-msg-' + Math.random().toString(36).substring(7),

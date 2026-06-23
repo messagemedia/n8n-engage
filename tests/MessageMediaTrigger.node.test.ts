@@ -49,12 +49,22 @@ describe('SinchEngageTrigger', () => {
       expect(webhooks?.[0].httpMethod).toBe('POST');
       expect(webhooks?.[0].responseMode).toBe('onReceived');
     });
+
+    it('should include contact list trigger event options', () => {
+      const eventTypeProperty = triggerNode.description.properties.find((p) => p.name === 'eventType');
+      const optionValues = (eventTypeProperty?.options || []).map((o: any) => o.value);
+
+      expect(optionValues).toContain('incomingSms');
+      expect(optionValues).toContain('contactAddedToList');
+      expect(optionValues).toContain('contactRemovedFromList');
+    });
   });
 
   describe('Webhook Methods', () => {
     describe('checkExists', () => {
       it('should return false when no webhookId is stored', async () => {
         const mockContext = {
+          getNodeParameter: vi.fn(() => 'incomingSms'),
           getWorkflowStaticData: vi.fn(() => ({})),
           getCredentials: vi.fn(async () => ({
             apiKey: 'test-key',
@@ -70,8 +80,9 @@ describe('SinchEngageTrigger', () => {
       });
 
   it('should return true when webhook exists in MessageMedia', async () => {
-        const mockWebhookData = { webhookId: 'webhook-123' };
+        const mockWebhookData = { webhookId: 'webhook-123', eventType: 'incomingSms' };
         const mockContext = {
+          getNodeParameter: vi.fn(() => 'incomingSms'),
           getWorkflowStaticData: vi.fn(() => mockWebhookData),
           getCredentials: vi.fn(async () => ({
             apiKey: 'test-key',
@@ -92,8 +103,9 @@ describe('SinchEngageTrigger', () => {
       });
 
       it('should return false and clear data when webhook does not exist', async () => {
-        const mockWebhookData = { webhookId: 'webhook-123', webhookUrl: 'https://example.com' };
+        const mockWebhookData = { webhookId: 'webhook-123', webhookUrl: 'https://example.com', eventType: 'incomingSms' };
         const mockContext = {
+          getNodeParameter: vi.fn(() => 'incomingSms'),
           getWorkflowStaticData: vi.fn(() => mockWebhookData),
           getCredentials: vi.fn(async () => ({
             apiKey: 'test-key',
@@ -117,6 +129,7 @@ describe('SinchEngageTrigger', () => {
   it('should create webhook and store ID', async () => {
         const mockWebhookData: Record<string, string> = {};
         const mockContext = {
+          getNodeParameter: vi.fn(() => 'incomingSms'),
           getNodeWebhookUrl: vi.fn(() => 'https://n8n.example.com/webhook/abc'),
           getCredentials: vi.fn(async () => ({
             apiKey: 'test-key',
@@ -137,11 +150,42 @@ describe('SinchEngageTrigger', () => {
         expect(result).toBe(true);
         expect(mockWebhookData.webhookId).toBe('webhook-123');
         expect(mockWebhookData.webhookUrl).toBe('https://n8n.example.com/webhook/abc');
+        expect(mockWebhookData.webhookType).toBe('messages');
         expect((mockContext.helpers.httpRequestWithAuthentication as any).mock.calls.length).toBe(1);
+      });
+
+      it('should create contact list webhook on connectors endpoint', async () => {
+        const mockWebhookData: Record<string, string> = {};
+        const mockContext = {
+          getNodeParameter: vi.fn(() => 'contactAddedToList'),
+          getNodeWebhookUrl: vi.fn(() => 'https://n8n.example.com/webhook/abc'),
+          getCredentials: vi.fn(async () => ({
+            apiKey: 'test-key',
+            apiSecret: 'test-secret',
+          })),
+          getWorkflowStaticData: vi.fn(() => mockWebhookData),
+          helpers: {
+            httpRequestWithAuthentication: vi.fn(async () => ({
+              id: 'webhook-456',
+              url: 'https://n8n.example.com/webhook/abc',
+              events: ['CONTACT_LIST_ADDED'],
+            })),
+          },
+          getNode: vi.fn(() => ({ name: 'Sinch Engage Trigger' })),
+        } as unknown as IHookFunctions;
+
+        const result = await triggerNode.webhookMethods.default.create.call(mockContext);
+        expect(result).toBe(true);
+        expect(mockWebhookData.webhookType).toBe('connectors');
+
+        const requestCall = (mockContext.helpers.httpRequestWithAuthentication as any).mock.calls[0]?.[1];
+        expect(requestCall.url).toBe('https://api.messagemedia.com/v1/connectors/webhooks');
+        expect(requestCall.body.events).toEqual(['CONTACT_LIST_ADDED']);
       });
 
       it('should throw NodeApiError on creation failure', async () => {
         const mockContext = {
+          getNodeParameter: vi.fn(() => 'incomingSms'),
           getNodeWebhookUrl: vi.fn(() => 'https://n8n.example.com/webhook/abc'),
           getCredentials: vi.fn(async () => ({
             apiKey: 'test-key',
@@ -164,7 +208,7 @@ describe('SinchEngageTrigger', () => {
 
     describe('delete', () => {
   it('should delete webhook and clear static data', async () => {
-        const mockWebhookData = { webhookId: 'webhook-123', webhookUrl: 'https://example.com' };
+        const mockWebhookData = { webhookId: 'webhook-123', webhookUrl: 'https://example.com', webhookType: 'messages' };
         const mockContext = {
           getWorkflowStaticData: vi.fn(() => mockWebhookData),
           getCredentials: vi.fn(async () => ({
@@ -180,7 +224,28 @@ describe('SinchEngageTrigger', () => {
         expect(result).toBe(true);
         expect(mockWebhookData.webhookId).toBeUndefined();
         expect(mockWebhookData.webhookUrl).toBeUndefined();
+        expect(mockWebhookData.webhookType).toBeUndefined();
         expect((mockContext.helpers.httpRequestWithAuthentication as any).mock.calls.length).toBe(1);
+      });
+
+      it('should delete connector webhooks using connectors endpoint', async () => {
+        const mockWebhookData = { webhookId: 'webhook-789', webhookType: 'connectors' };
+        const mockContext = {
+          getWorkflowStaticData: vi.fn(() => mockWebhookData),
+          getCredentials: vi.fn(async () => ({
+            apiKey: 'test-key',
+            apiSecret: 'test-secret',
+          })),
+          helpers: {
+            httpRequestWithAuthentication: vi.fn(async () => ({})),
+          },
+        } as unknown as IHookFunctions;
+
+        const result = await triggerNode.webhookMethods.default.delete.call(mockContext);
+        expect(result).toBe(true);
+
+        const requestCall = (mockContext.helpers.httpRequestWithAuthentication as any).mock.calls[0]?.[1];
+        expect(requestCall.url).toBe('https://api.messagemedia.com/v1/connectors/webhooks/webhook-789');
       });
 
       it('should return true if no webhookId is stored', async () => {
@@ -234,6 +299,7 @@ describe('SinchEngageTrigger', () => {
       };
 
       const mockContext = {
+        getNodeParameter: vi.fn(() => 'incomingSms'),
         getBodyData: vi.fn(() => mockIncomingSms),
       } as unknown as IWebhookFunctions;
 
@@ -265,6 +331,7 @@ describe('SinchEngageTrigger', () => {
       };
 
       const mockContext = {
+        getNodeParameter: vi.fn(() => 'incomingSms'),
         getBodyData: vi.fn(() => mockIncomingSms),
       } as unknown as IWebhookFunctions;
 
@@ -275,9 +342,123 @@ describe('SinchEngageTrigger', () => {
       expect(outputData.messageId).toBe('msg-67890');
       expect(outputData.message).toBe('Test message');
     });
+
+    it('should process contact list added webhook correctly', async () => {
+      const mockContactEvent = {
+        eventId: 'evt-001',
+        eventType: 'CONTACT_LIST_ADDED',
+        eventDeliveryId: 'del-001',
+        vendorId: 'vendor-1',
+        accountId: 'account-1',
+        contactId: 'contact-123',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        phoneNumber: '+61437536808',
+        email: 'jane.doe@example.com',
+        listId: 'list-123',
+        listName: 'VIP Customers',
+        receivedTimestamp: '2026-06-02T06:00:00Z',
+      };
+
+      const mockContext = {
+        getNodeParameter: vi.fn(() => 'contactAddedToList'),
+        getBodyData: vi.fn(() => mockContactEvent),
+      } as unknown as IWebhookFunctions;
+
+      const result = await triggerNode.webhook.call(mockContext);
+      const outputData = result.workflowData![0][0].json;
+
+      expect(outputData).toEqual({
+        eventType: 'CONTACT_LIST_ADDED',
+        contactId: 'contact-123',
+        listId: 'list-123',
+        listName: 'VIP Customers',
+        receivedTimestamp: '2026-06-02T06:00:00Z',
+      });
+    });
+
+    it('should process contact list removed webhook correctly', async () => {
+      const mockContactEvent = {
+        eventType: 'CONTACT_LIST_REMOVED',
+        contactId: 'contact-456',
+        listId: 'list-456',
+        listName: 'Newsletter',
+        receivedTimestamp: '2026-06-02T07:00:00Z',
+      };
+
+      const mockContext = {
+        getNodeParameter: vi.fn(() => 'contactRemovedFromList'),
+        getBodyData: vi.fn(() => mockContactEvent),
+      } as unknown as IWebhookFunctions;
+
+      const result = await triggerNode.webhook.call(mockContext);
+      const outputData = result.workflowData![0][0].json;
+
+      expect(outputData).toEqual({
+        eventType: 'CONTACT_LIST_REMOVED',
+        contactId: 'contact-456',
+        listId: 'list-456',
+        listName: 'Newsletter',
+        receivedTimestamp: '2026-06-02T07:00:00Z',
+      });
+    });
+
+    it('should use fallback eventType when not present in payload', async () => {
+      const mockContactEvent = {
+        contactId: 'contact-789',
+        listId: 'list-789',
+        listName: 'Fallback List',
+        receivedTimestamp: '2026-06-02T08:00:00Z',
+      };
+
+      const mockContext = {
+        getNodeParameter: vi.fn(() => 'contactAddedToList'),
+        getBodyData: vi.fn(() => mockContactEvent),
+      } as unknown as IWebhookFunctions;
+
+      const result = await triggerNode.webhook.call(mockContext);
+      const outputData = result.workflowData![0][0].json;
+
+      expect(outputData.eventType).toBe('CONTACT_LIST_ADDED');
+    });
   });
 
   describe('manualTriggerFunction', () => {
+    it('should provide sample contact list added test data', async () => {
+      const mockContext = {
+        getNodeParameter: vi.fn(() => 'contactAddedToList'),
+        getCredentials: vi.fn(async () => ({
+          apiKey: 'test-key',
+          apiSecret: 'test-secret',
+        })),
+      } as unknown as IHookFunctions;
+
+      const result = await triggerNode.manualTriggerFunction!.call(mockContext);
+      const outputData = result.workflowData![0][0].json;
+
+      expect(Object.keys(outputData)).toEqual(['eventType', 'contactId', 'listId', 'listName', 'receivedTimestamp']);
+      expect(outputData.eventType).toBe('CONTACT_LIST_ADDED');
+      expect(outputData.contactId).toBe('sample-contact-id');
+      expect(outputData.listId).toBe('sample-list-id');
+      expect(outputData.listName).toBe('Sample List');
+    });
+
+    it('should provide sample contact list removed test data', async () => {
+      const mockContext = {
+        getNodeParameter: vi.fn(() => 'contactRemovedFromList'),
+        getCredentials: vi.fn(async () => ({
+          apiKey: 'test-key',
+          apiSecret: 'test-secret',
+        })),
+      } as unknown as IHookFunctions;
+
+      const result = await triggerNode.manualTriggerFunction!.call(mockContext);
+      const outputData = result.workflowData![0][0].json;
+
+      expect(Object.keys(outputData)).toEqual(['eventType', 'contactId', 'listId', 'listName', 'receivedTimestamp']);
+      expect(outputData.eventType).toBe('CONTACT_LIST_REMOVED');
+    });
+
     it('should provide sample test data', async () => {
       const mockContext = {
         getCredentials: vi.fn(async () => ({
