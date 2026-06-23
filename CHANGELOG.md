@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.0] - 2026-06-23
+
+### Added
+
+- Contact list trigger events for Sinch Engage webhook support (WFP-3440)
+  - New trigger event types: "Contact Added To List" and "Contact Removed From List"
+  - Support for MessageMedia Connectors API webhooks (`/v1/connectors/webhooks`) alongside existing Messages API webhooks
+  - Automatic webhook recreation when event type is changed in node configuration
+  - Webhook type tracking (`messages` or `connectors`) in workflow static data
+  - Custom payload templates for contact list events including `contactId`, `listId`, `listName`, and `receivedTimestamp`
+  - Dynamic webhook URL routing based on event type (messages vs. connectors endpoints)
+
 ## [1.0.0-alpha.16] - 2026-04-08
 
 ### Fixed
