@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.1.1] - 2026-06-24
+
+### Fixed
+
+- **[HIGH]** Removed forbidden `prepare` lifecycle script from package.json (n8n Cloud security requirement)
+  - The `prepare` script executed arbitrary code during installation and is blocked by n8n's security scan
+  - Build still occurs before publishing via existing `prepublishOnly` script
+  - Package now passes `npx @n8n/scan-community-package@latest` security scan
+- **[MEDIUM]** Fixed codex node prefix to match scoped package name (n8n Cloud verification requirement)
+  - Updated `SinchEngage.node.json`: changed node prefix from `n8n-nodes-sinch-engage.sinchEngage` to `@sinch-engage/n8n-nodes-sinch-engage.sinchEngage`
+  - Updated `SinchEngageTrigger.node.json`: changed node prefix from `n8n-nodes-sinch-engage.sinchEngageTrigger` to `@sinch-engage/n8n-nodes-sinch-engage.sinchEngageTrigger`
+  - Node identifiers now correctly reflect the published npm package scope `@sinch-engage/`
+  - Complies with n8n codex file specification: https://docs.n8n.io/integrations/creating-nodes/build/reference/node-codex-files/
+
 ## [1.1.0] - 2026-06-23
 
 ### Added

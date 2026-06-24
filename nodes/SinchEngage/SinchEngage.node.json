@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-sinch-engage.sinchEngage",
+	"node": "@sinch-engage/n8n-nodes-sinch-engage.sinchEngage",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Communication"],
